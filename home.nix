@@ -625,6 +625,12 @@ in
   #  };
   #};
 
+  xdg.configFile."fish/functions/mkcd.fish".text = ''
+  function mkcd --description 'Create and enter a directory'
+  	mkdir -p $argv[1]; and cd $argv[1];
+  end
+  '';
+
   home.file.".ghci".text = ''
     :set prompt "λ> "
   '';
