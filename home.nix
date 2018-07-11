@@ -42,6 +42,7 @@ let
       pkgs.gnumake
       pkgs.gnupg
       pkgs.htop
+      pkgs.isync
       pkgs.keybase
       pkgs.ncdu
       pkgs.notmuch
