@@ -48,6 +48,7 @@ let
       pkgs.pass
       pkgs.syncthing
       pkgs.tectonic
+      pkgs.tmux
       pkgs.zsh
     ];
 
