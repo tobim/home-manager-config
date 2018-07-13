@@ -35,7 +35,9 @@ let
     ];
 
     default_packages = [
+      pkgs.cmake
       pkgs.clang-tools
+      pkgs.coreutils
       pkgs.cquery
       pkgs.fzf
       pkgs.git
@@ -45,6 +47,7 @@ let
       pkgs.isync
       pkgs.keybase
       pkgs.ncdu
+      pkgs.ninja
       pkgs.notmuch
       pkgs.pass
       pkgs.syncthing
@@ -138,6 +141,7 @@ in
       vam.knownPlugins = pkgs.vimPlugins // customPlugins;
       vam.pluginDictionaries = [
         { names = [
+          "fzfWrapper"
           "fzf-vim"
           "idris-vim"
           "LanguageClient-neovim"
@@ -163,10 +167,10 @@ in
         "set history=1000
 
         "" reload an open file if it is changed from outside
-        "set autoread
+        set autoread
 
         "" don't update the display while executing macros
-        "set lazyredraw
+        set lazyredraw
 
         "" vim sets terminal title
         "set title
@@ -178,29 +182,29 @@ in
         "" autocmd BufRead,BufWritePre * if ! &bin | silent! %s/\s\+$// | endif
 
         "" search from current directory upwards for ctags file
-        "set tags+=tags;/
+        set tags+=tags;/
 
         "" ignore the following file endings completely
-        "set wildignore=*.swp,*.o,*.oo,*.pyc,*.info,*.aux,*.dvi,*.bbl,*.blg
-        "set wildignore+=*.brf,*.cb,*.ind,*.idx,*.ilg,*.inx,*.out,*.toc
-        "set wildignore+=*/tmp/*,*.so,*.a,*.la,*.zip,*.bz2,*.gz,*.tar
+        set wildignore=*.swp,*.o,*.oo,*.pyc,*.info,*.aux,*.dvi,*.bbl,*.blg
+        set wildignore+=*.brf,*.cb,*.ind,*.idx,*.ilg,*.inx,*.out,*.toc
+        set wildignore+=*/tmp/*,*.so,*.a,*.la,*.zip,*.bz2,*.gz,*.tar
 
         "" give the following file endings less priority
         "set suffixes=.bak,~,.log,.h,.P
 
-        "" save central undo files
-        "set undofile
-        "set undodir=~/.config/nvim/tmp/undo
+        " save central undo files
+        set undofile
+        set undodir=~/.config/nvim/tmp/undo
 
-        "set backup
-        "set backupdir=~/.config/nvim/tmp/backup
+        set backup
+        set backupdir=~/.config/nvim/tmp/backup
 
-        "set exrc
+        set exrc
 
-        "set noswapfile
+        set noswapfile
 
-        "au BufEnter * let g:bufcwd = getcwd()
-        ""}}}
+        au BufEnter * let g:bufcwd = getcwd()
+        "}}}
 
         " => VIM user interface {{{
         """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -448,6 +452,14 @@ in
         "call deoplete#enable()
         " }}}
 
+        " fzf.vim "{{{
+        nnoremap [fzf] <Nop>
+        nmap <space> [fzf]
+        nnoremap <silent> [fzf]f :Files<CR>
+        nnoremap <silent> [fzf]a :Buffers<CR>
+        nnoremap <silent> [fzf]m :History<CR>
+        " }}}
+
         " denite.nvim "{{{
 
         " " Change mappings
@@ -628,6 +640,31 @@ in
   xdg.configFile."fish/functions/mkcd.fish".text = ''
   function mkcd --description 'Create and enter a directory'
   	mkdir -p $argv[1]; and cd $argv[1];
+  end
+  '';
+
+  xdg.configFile."fish/functions/fzf-bcd-widget.fish".text = ''
+  function fzf-bcd-widget --description 'cd backwards'
+  	pwd | awk -v RS=/ '/\n/ {exit} {p=p $0 "/"; print p}' | tac | eval (__fzfcmd) +m --select-1 --exit-0 $FZF_BCD_OPTS | read -l result
+  	[ "$result" ]; and cd $result
+  	commandline -f repaint
+  end
+  '';
+
+  xdg.configFile."fish/functions/fzf-cdhist-widget.fish".text = ''
+  function fzf-cdhist-widget --description 'cd to one of the previously visited locatiosn'
+  	# Clear non-existent folders from cdhist.
+  	set -l buf
+  	for i in (seq 1 (count $dirprev))
+  		set -l dir $dirprev[$i]
+  		if test -d $dir
+  			set buf $buf $dir
+  		end
+  	end
+  	set dirprev $buf
+  	string join \n $dirprev | tac | sed 1d | eval (__fzfcmd) +m --tiebreak=index --toggle-sort=ctrl-r $FZF_CDHIST_OPTS | read -l result
+  	[ "$result" ]; and cd $result
+  	commandline -f repaint
   end
   '';
 
