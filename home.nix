@@ -141,6 +141,7 @@ in
       vam.knownPlugins = pkgs.vimPlugins // customPlugins;
       vam.pluginDictionaries = [
         { names = [
+          "deoplete-nvim"
           "fzfWrapper"
           "fzf-vim"
           "idris-vim"
@@ -192,12 +193,23 @@ in
         "" give the following file endings less priority
         "set suffixes=.bak,~,.log,.h,.P
 
-        " save central undo files
-        set undofile
-        set undodir=~/.config/nvim/tmp/undo
-
-        set backup
-        set backupdir=~/.config/nvim/tmp/backup
+        " Put plugins and dictionaries in this dir (also on Windows)
+        let dataDir = '$HOME/.local/share/nvim'
+        call mkdir(dataDir, 'p')
+        
+        " Save central undo files
+        if has('persistent_undo')
+            let dir_ = expand(dataDir . '/undo')
+            call mkdir(dir_, 'p')
+            let &undodir = dir_
+            set undofile
+        endif
+        if has('write_backup')
+            let dir_ = expand(dataDir . '/backup')
+            call mkdir(dir_, 'p')
+            let &backupdir = dir_
+            set backup
+        endif
 
         set exrc
 
@@ -449,7 +461,7 @@ in
         """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
         " deoplete.nvim "{{{
-        "call deoplete#enable()
+        let g:deoplete#enable_at_startup = 1
         " }}}
 
         " fzf.vim "{{{
