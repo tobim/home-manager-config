@@ -38,7 +38,6 @@ let
       pkgs.cmake
       pkgs.clang-tools
       pkgs.coreutils
-      pkgs.cquery
       pkgs.fzf
       pkgs.git
       pkgs.gnumake
@@ -56,6 +55,10 @@ let
       pkgs.tree
       pkgs.zsh
     ];
+
+    unstable_packages = [] ++
+      (if (builtins.hasAttr "cquery" pkgs) then [ pkgs.cquery ] else [])
+    ;
 
     customPlugins = {
       vim-clang-format = pkgs.vimUtils.buildVimPlugin {
@@ -112,7 +115,10 @@ let
 in
 {
   home = {
-    packages = default_packages;
+    packages = default_packages ++ unstable_packages ++
+      (if builtins.currentSystem == "x86_64-linux"
+      then linux_packages ++ home_packages
+      else []);
 
     sessionVariables = {
       EDITOR = "nvim";
@@ -132,6 +138,24 @@ in
 
   programs.zsh = {
     enable = true;
+  };
+
+  programs.git = {
+    enable = true;
+    userName = "Tobias Mayer";
+    userEmail = "tobim@fastmail.fm";
+    aliases = {
+      st = "status --short --branch ";
+      ci = "commit ";
+      amend = "commit --amend ";
+      undo = "reset --soft HEAD^ ";
+      glog = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' ";
+      grog = "log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)' ";
+    };
+    extraConfig=''
+      [transfer]
+        fschkobjects = true
+      '';
   };
 
   programs.neovim = {
@@ -620,34 +644,34 @@ in
 
   };
 
-  #programs.gnome-terminal = {
-  #  enable = true;
-  #  showMenubar = false;
-  #  profile = {
-  #    "5ddfe964-7ee6-4131-b449-26bdd97518f7" = {
-  #      default = true;
-  #      visibleName = "Tomorrow Night";
-  #      cursorShape = "ibeam";
-  #      font = "DejaVu Sans Mono 8";
-  #      showScrollbar = false;
-  #      colors = {
-  #        foregroundColor = "rgb(197,200,198)";
-  #        palette = [
-  #          "rgb(0,0,0)" "rgb(145,34,38)"
-  #          "rgb(119,137,0)" "rgb(174,123,0)"
-  #          "rgb(103,123,192)" "rgb(104,42,155)"
-  #          "rgb(43,102,81)" "rgb(146,149,147)"
-  #          "rgb(102,102,102)" "rgb(204,102,102)"
-  #          "rgb(181,189,104)" "rgb(240,198,116)"
-  #          "rgb(140,152,191)" "rgb(178,148,187)"
-  #          "rgb(138,190,183)" "rgb(236,235,236)"
-  #        ];
-  #        boldColor = "rgb(138,186,183)";
-  #        backgroundColor = "rgb(29,31,33)";
-  #      };
-  #    };
-  #  };
-  #};
+  programs.gnome-terminal = if builtins.currentSystem == "x86_64-linux" then {
+    enable = true;
+    showMenubar = false;
+    profile = {
+      "5ddfe964-7ee6-4131-b449-26bdd97518f7" = {
+        default = true;
+        visibleName = "Tomorrow Night";
+        cursorShape = "ibeam";
+        font = "DejaVu Sans Mono 8";
+        showScrollbar = false;
+        colors = {
+          foregroundColor = "rgb(197,200,198)";
+          palette = [
+            "rgb(0,0,0)" "rgb(145,34,38)"
+            "rgb(119,137,0)" "rgb(174,123,0)"
+            "rgb(103,123,192)" "rgb(104,42,155)"
+            "rgb(43,102,81)" "rgb(146,149,147)"
+            "rgb(102,102,102)" "rgb(204,102,102)"
+            "rgb(181,189,104)" "rgb(240,198,116)"
+            "rgb(140,152,191)" "rgb(178,148,187)"
+            "rgb(138,190,183)" "rgb(236,235,236)"
+          ];
+          boldColor = "rgb(138,186,183)";
+          backgroundColor = "rgb(29,31,33)";
+        };
+      };
+    };
+  } else {};
 
   xdg.configFile."fish/functions/mkcd.fish".text = ''
   function mkcd --description 'Create and enter a directory'
