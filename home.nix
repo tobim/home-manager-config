@@ -26,6 +26,12 @@ let
       haskellPackages.buchhaltung
     ] ++ gst_packages;
 
+    darwin_packages = with pkgs.darwin.apple_sdk; [
+      frameworks.Security
+      frameworks.CoreFoundation
+      frameworks.CoreServices
+    ];
+
     home_packages = with pkgs; [
       pkgs.beets
       pkgs.hledger
@@ -118,6 +124,8 @@ in
     packages = default_packages ++ unstable_packages ++
       (if builtins.currentSystem == "x86_64-linux"
       then linux_packages ++ home_packages
+      else if builtins.currentSystem == "x86_64-darwin"
+      then darwin_packages
       else []);
 
     sessionVariables = {
