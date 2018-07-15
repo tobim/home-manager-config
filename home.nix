@@ -7,7 +7,6 @@ let
       gst-plugins-bad
       gst-plugins-ugly
       gst-ffmpeg
-      #gst-libav
     ];
 
     linux_packages = with pkgs; [
@@ -23,6 +22,7 @@ let
       pkgs.qutebrowser
       pkgs.pdfshuffler
       pkgs.xournal
+      pkgs.xsel
       haskellPackages.buchhaltung
     ] ++ gst_packages;
 
@@ -77,6 +77,17 @@ let
         };
       };
 
+      vim-diminactive = pkgs.vimUtils.buildVimPlugin {
+        name = "vim-diminactive";
+        src = pkgs.fetchFromGitHub {
+          owner = "blueyed";
+          repo = "vim-diminactive";
+          rev = "6f2e14e6ff6a038285937c378ec3685e6ff7ee36";
+          sha256 = "14jf5hh3v2f5wb10v09ygx15pxbwziv20pwv0fqkakxwf0vqwd50";
+        };
+        buildPhase = "true";
+      };
+
       vim-pasta = pkgs.vimUtils.buildVimPlugin {
         name = "vim-pasta";
         src = pkgs.fetchFromGitHub {
@@ -94,6 +105,16 @@ let
           repo = "vim-textobj-user";
           rev = "e231b65797b5765b3ee862d71077e9bd56f3ca3e";
           sha256 = "0zsgr2cn8s42d7jllnxw2cvqkl27lc921d1mkph7ny7jgnghaay9";
+        };
+      };
+
+      vim-visual-star-search = pkgs.vimUtils.buildVimPlugin {
+        name = "vim-visual-star-search";
+        src = pkgs.fetchFromGitHub {
+          owner = "bronson";
+          repo = "vim-visual-star-search";
+          rev = "fa55818903301d61cef67341d3524a63a14bc033";
+          sha256 = "1ny6sdl08mbh5j3fvsznlgxdv2hip190dmsgs22gygn8wpj2xc8l";
         };
       };
 
@@ -182,12 +203,14 @@ in
           "vim-addon-nix"
           "vim-airline"
           "vim-clang-format"
+          "vim-diminactive"
           "vim-easy-align"
           "vim-gitgutter"
           "vim-operator-user"
           "vim-pasta"
           "vim-textobj-user"
           "vim-textobj-variable-segment"
+          "vim-visual-star-search"
           "flatlandia"
           "gruvbox"
         ]; }
