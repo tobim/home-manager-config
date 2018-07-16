@@ -43,6 +43,7 @@ let
     default_packages = [
       pkgs.cmake
       pkgs.clang-tools
+      pkgs.cloc
       pkgs.coreutils
       pkgs.fzf
       pkgs.git
@@ -194,6 +195,7 @@ in
       vam.knownPlugins = pkgs.vimPlugins // customPlugins;
       vam.pluginDictionaries = [
         { names = [
+          "ale"
           "deoplete-nvim"
           "fzfWrapper"
           "fzf-vim"
@@ -632,6 +634,9 @@ in
         nnoremap <silent> gr :call LanguageClient_textDocument_references()<CR>
         nnoremap <silent> gs :call LanguageClient_textDocument_documentSymbol()<CR>
         nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
+        " }}}
+
+        " 'w0rp/ale' "{{{
         " }}}
 
         " 'arakashic/chromatica.nvim' "{{{
