@@ -715,6 +715,22 @@ in
   end
   '';
 
+  xdg.configFile."fish/functions/expand-dot-to-parent-directory-path.fish".text = ''
+  function expand-dot-to-parent-directory-path --description 'expand ... to ../.. etc'
+    # Get commandline up to cursor
+    set -l cmd (commandline --cut-at-cursor)
+
+    # Match last line
+    switch $cmd[-1]
+      case '*..'
+        commandline --insert '/..'
+      case '*'
+        commandline --insert '.'
+    end
+  end
+  '';
+
+
   xdg.configFile."fish/functions/fzf-bcd-widget.fish".text = ''
   function fzf-bcd-widget --description 'cd backwards'
   	pwd | awk -v RS=/ '/\n/ {exit} {p=p $0 "/"; print p}' | tac | eval (__fzfcmd) +m --select-1 --exit-0 $FZF_BCD_OPTS | read -l result
@@ -737,6 +753,12 @@ in
   	string join \n $dirprev | tac | sed 1d | eval (__fzfcmd) +m --tiebreak=index --toggle-sort=ctrl-r $FZF_CDHIST_OPTS | read -l result
   	[ "$result" ]; and cd $result
   	commandline -f repaint
+  end
+  '';
+
+  xdg.configFile."fish/config.fish".text = ''
+  function fish_user_key_bindings
+    bind . 'expand-dot-to-parent-directory-path'
   end
   '';
 
