@@ -251,7 +251,7 @@ in
         "set suffixes=.bak,~,.log,.h,.P
 
         " Put plugins and dictionaries in this dir (also on Windows)
-        let dataDir = '$HOME/.local/share/nvim'
+        let dataDir = $HOME.'/.local/share/nvim'
         call mkdir(dataDir, 'p')
         
         " Save central undo files
@@ -760,6 +760,10 @@ in
   function fish_user_key_bindings
     bind . 'expand-dot-to-parent-directory-path'
   end
+  '';
+
+  home.file.".gdbinit".text = ''
+    set history save on
   '';
 
   home.file.".ghci".text = ''
