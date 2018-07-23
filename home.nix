@@ -63,9 +63,16 @@ let
       pkgs.zsh
     ];
 
-    unstable_packages = [] ++
-      (if (builtins.hasAttr "cquery" pkgs) then [ pkgs.cquery ] else [])
+    cpp_packages = [] ++
+      (if (builtins.hasAttr "cquery" pkgs.cpppkgs) then [ pkgs.cpppkgs.cquery ] else [])
     ;
+
+    python_packages = [
+      (pkgs.python3.withPackages (ps: [] ++
+        (if (builtins.hasAttr "python-language-server" ps) then with ps;[ 
+          python-language-server pyls-mypy pyls-isort
+        ] else [])))
+    ];
 
     customPlugins = {
       vim-clang-format = pkgs.vimUtils.buildVimPlugin {
@@ -143,7 +150,7 @@ let
 in
 {
   home = {
-    packages = default_packages ++ unstable_packages ++
+    packages = default_packages ++ cpp_packages ++ python_packages ++
       (if builtins.currentSystem == "x86_64-linux"
       then linux_packages ++ home_packages
       else if builtins.currentSystem == "x86_64-darwin"
@@ -197,11 +204,13 @@ in
         { names = [
           "ale"
           "deoplete-nvim"
+          "fugitive"
           "fzfWrapper"
           "fzf-vim"
           "idris-vim"
           "LanguageClient-neovim"
           "purescript-vim"
+          "rhubarb"
           "vim-addon-nix"
           "vim-airline"
           "vim-clang-format"
@@ -310,6 +319,9 @@ in
 
         " make the command bar 2 lines high
         set cmdheight=2
+
+        " Always draw the signcolumn
+        set signcolumn=yes
 
         " highlight current line
         set cursorline
@@ -615,11 +627,12 @@ in
         set hidden
 
         let g:LanguageClient_serverCommands = {
-            \ 'haskell': ['hie', '--lsp'],
-            \ 'rust': ['rustup', 'run', 'nightly', 'rls'],
-            \ 'javascript': ['/opt/javascript-typescript-langserver/lib/language-server-stdio.js'],
-            \ 'cpp': ['cquery', '--log-file=/tmp/cq.log'],
             \ 'c': ['cquery', '--log-file=/tmp/cq.log'],
+            \ 'cpp': ['cquery', '--log-file=/tmp/cq.log'],
+            \ 'haskell': ['hie', '--lsp'],
+            \ 'javascript': ['/opt/javascript-typescript-langserver/lib/language-server-stdio.js'],
+            \ 'python': ['pyls'],
+            \ 'rust': ['rustup', 'run', 'nightly', 'rls'],
             \ }
 
         " Automatically start language servers.
