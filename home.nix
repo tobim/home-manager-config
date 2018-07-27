@@ -498,6 +498,11 @@ in
         inoremap jk <ESC>
         inoremap kj <ESC>
 
+        " close terminal with esc...
+        tnoremap <ESC> <C-\><C-n>
+        tnoremap jk <C-\><C-n>
+        tnoremap jk <C-\><C-n>
+
         " append current line to the next
         nnoremap <leader>J :m+1<CR>kJ
 
@@ -662,6 +667,8 @@ in
         nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
         nnoremap <silent> gr :call LanguageClient_textDocument_references()<CR>
         nnoremap <silent> gs :call LanguageClient_textDocument_documentSymbol()<CR>
+        nnoremap <silent> gf :call LanguageClient_textDocument_formatting()<CR>
+        vnoremap <silent> gf :call LanguageClient_textDocument_formatting()<CR>
         nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
         " }}}
 
@@ -777,6 +784,48 @@ in
   color19 #504945
   color20 #bdae93
   color21 #ebdbb2
+  '';
+
+  xdg.configFile."fish/functions/fish_prompt.fish".text = ''
+  function fish_prompt
+    set -l last_status $status
+
+    if not set -q __fish_git_prompt_show_informative_status
+      set -g __fish_git_prompt_show_informative_status 1
+    end
+    if not set -q __fish_git_prompt_color_branch
+      set -g __fish_git_prompt_color_branch brmagenta
+    end
+    if not set -q __fish_git_prompt_showupstream
+      set -g __fish_git_prompt_showupstream "informative"
+    end
+    if not set -q __fish_git_prompt_showdirtystate
+      set -g __fish_git_prompt_showdirtystate "yes"
+    end
+    if not set -q __fish_git_prompt_color_stagedstate
+      set -g __fish_git_prompt_color_stagedstate yellow
+    end
+    if not set -q __fish_git_prompt_color_invalidstate
+      set -g __fish_git_prompt_color_invalidstate red
+    end
+    if not set -q __fish_git_prompt_color_cleanstate
+      set -g __fish_git_prompt_color_cleanstate brgreen
+    end
+
+    printf '%s%s %s%s%s%s ' (set_color $fish_color_host) (prompt_hostname) (set_color $fish_color_cwd) (prompt_pwd) (set_color normal) (__fish_git_prompt)
+
+    if not test $last_status -eq 0
+      set_color $fish_color_error
+    end
+    echo -n '$ '
+    set_color normal
+  end
+  '';
+
+  xdg.configFile."fish/functions/gg.fish".text = ''
+  function gg --description 'Alias for git grep'
+    git grep $argv
+  end
   '';
 
   xdg.configFile."fish/functions/mkcd.fish".text = ''
