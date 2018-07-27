@@ -50,12 +50,14 @@ let
       pkgs.gnumake
       pkgs.gnupg
       pkgs.htop
+      pkgs.imagemagick
       pkgs.isync
       pkgs.keybase
       pkgs.ncdu
       pkgs.ninja
       pkgs.notmuch
       pkgs.pass
+      pkgs.ripgrep
       pkgs.syncthing
       pkgs.tectonic
       pkgs.tmux
@@ -68,10 +70,17 @@ let
     ;
 
     python_packages = [
-      (pkgs.python3.withPackages (ps: [] ++
-        (if (builtins.hasAttr "python-language-server" ps) then with ps;[ 
-          python-language-server pyls-mypy pyls-isort
-        ] else [])))
+      (pkgs.python3.withPackages (ps: with ps; [
+        flake8
+        pylint
+        yapf
+      ] ++
+      (if (builtins.hasAttr "python-language-server" ps) then with ps;[
+        python-language-server
+        pyls-mypy
+        pyls-isort
+        rope
+      ] else [])))
     ];
 
     customPlugins = {
@@ -399,16 +408,16 @@ in
         set visualbell
         set t_vb=
 
-        "if has ('balloon_eval')
+        "if has ('ballooneval')
         "  set balloondelay=100
         "endif
         "set noequalalways
 
-        "if exists('&inccommand')
-        "  set inccommand=split
-        "endif
+        if exists('&inccommand')
+          set inccommand=split
+        endif
 
-        "set list listchars=tab:¦\ ,trail:˽
+        set list listchars=tab:¦\ ,trail:˽
         ""set listchars=tab:▶\ ,eol:★
         ""set listchars+=trail:◥
         "set listchars+=extends:❯ "〉
@@ -534,11 +543,16 @@ in
         " }}}
 
         " fzf.vim "{{{
+        command! -bang -nargs=* GGrep
+          \ call fzf#vim#grep('git grep --line-number '.shellescape(<q-args>), 0, <bang>0)
+
         nnoremap [fzf] <Nop>
         nmap <space> [fzf]
         nnoremap <silent> [fzf]f :Files<CR>
         nnoremap <silent> [fzf]a :Buffers<CR>
         nnoremap <silent> [fzf]m :History<CR>
+        nnoremap <silent> [fzf]g :GGrep<CR>
+        nnoremap <silent> [fzf]h :Helptags<CR>
         " }}}
 
         " denite.nvim "{{{
@@ -618,8 +632,9 @@ in
 
         " w0rp/ale "{{{
         "let g:ale_linters = {'cpp': ['clang']}
-        "nnoremap <silent> <C-p> <Plug>(ale_previous_wrap)
-        "nnoremap <silent> <C-n> <Plug>(ale_next_wrap)
+        let g:ale_python_pylint_options = '--rcfile setup.cfg'
+        nnoremap <silent> <C-p> <Plug>(ale_previous_wrap)
+        nnoremap <silent> <C-n> <Plug>(ale_next_wrap)
         " }}}
 
         " {{{
@@ -637,7 +652,8 @@ in
 
         " Automatically start language servers.
         let g:LanguageClient_autoStart = 1
-        let g:LanguageClient_loadSettings = 1 " Use an absolute configuration path if you want system-wide settings
+        let g:LanguageClient_loadSettings = 1
+        " Use an absolute configuration path if you want system-wide settings
         let g:LanguageClient_settingsPath = '/home/tobim/.config/nvim/settings.json'
         set completefunc=LanguageClient#complete
         set formatexpr=LanguageClient_textDocument_rangeFormatting()
@@ -721,6 +737,47 @@ in
       };
     };
   } else {};
+
+  xdg.configFile."kitty/kitty.conf".text = ''
+  include $HOME/misc/base16-kitty/base16-gruvbox-dark-medium-256.conf
+
+  # Base16 Gruvbox dark, medium - kitty color config
+  # Dawid Kurek (dawikur@gmail.com), morhetz (https://github.com/morhetz/gruvbox)
+  background #282828
+  foreground #d5c4a1
+  selection_background #d5c4a1
+  selection_foreground #282828
+  url_color #bdae93
+  cursor #d5c4a1
+
+  # normal
+  color0 #282828
+  color1 #fb4934
+  color2 #b8bb26
+  color3 #fabd2f
+  color4 #83a598
+  color5 #d3869b
+  color6 #8ec07c
+  color7 #d5c4a1
+
+  # bright
+  color8 #665c54
+  color9 #fb4934
+  color10 #b8bb26
+  color11 #fabd2f
+  color12 #83a598
+  color13 #d3869b
+  color14 #8ec07c
+  color15 #d5c4a1
+
+  # extended base16 colors
+  color16 #fe8019
+  color17 #d65d0e
+  color18 #3c3836
+  color19 #504945
+  color20 #bdae93
+  color21 #ebdbb2
+  '';
 
   xdg.configFile."fish/functions/mkcd.fish".text = ''
   function mkcd --description 'Create and enter a directory'
