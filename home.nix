@@ -54,6 +54,7 @@ let
       pkgs.isync
       pkgs.keybase
       pkgs.ncdu
+      pkgs.neovim-remote
       pkgs.ninja
       pkgs.notmuch
       pkgs.pass
@@ -84,6 +85,16 @@ let
     ];
 
     customPlugins = {
+      neoterm = pkgs.vimUtils.buildVimPlugin {
+        name = "neoterm";
+        src = pkgs.fetchFromGitHub {
+          owner = "kassio";
+          repo = "neoterm";
+          rev = "287eb27d0a21d81c92c1183a5527e1ff0fdc95cb";
+          sha256 = "06ny9khdyckszxr77w13hsw2jlf92caifr8x382cda2v2vq3jz4n";
+        };
+      };
+
       vim-clang-format = pkgs.vimUtils.buildVimPlugin {
         name = "vim-clang-format";
         src = pkgs.fetchFromGitHub {
@@ -218,6 +229,7 @@ in
           "fzf-vim"
           "idris-vim"
           "LanguageClient-neovim"
+          "neoterm"
           "purescript-vim"
           "rhubarb"
           "vim-addon-nix"
@@ -271,7 +283,7 @@ in
         " Put plugins and dictionaries in this dir (also on Windows)
         let dataDir = $HOME.'/.local/share/nvim'
         call mkdir(dataDir, 'p')
-        
+
         " Save central undo files
         if has('persistent_undo')
             let dir_ = expand(dataDir . '/undo')
@@ -428,6 +440,9 @@ in
           "endif
         " Mark lines that have been wrapped
         "set showbreak=↪
+
+        set splitbelow
+        set splitright
 
         "if has('gui_running')
         "" open maximized
@@ -636,7 +651,8 @@ in
         " }}}
 
         " w0rp/ale "{{{
-        "let g:ale_linters = {'cpp': ['clang']}
+        let g:ale_c_build_dir = './'
+        let g:ale_linters = {'cpp': ['cppcheck', 'clangtidy']}
         let g:ale_python_pylint_options = '--rcfile setup.cfg'
         nnoremap <silent> <C-p> <Plug>(ale_previous_wrap)
         nnoremap <silent> <C-n> <Plug>(ale_next_wrap)
