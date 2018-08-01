@@ -10,9 +10,10 @@ let
     ];
 
     linux_packages = with pkgs; [
+      pkgs.alacritty
       pkgs.aqbanking
       pkgs.chromium
-      pkgs.cutegram
+      #pkgs.cutegram
       pkgs.dtrx
       pkgs.firefox
       pkgs.gparted
@@ -23,7 +24,7 @@ let
       pkgs.pdfshuffler
       pkgs.xournal
       pkgs.xsel
-      haskellPackages.buchhaltung
+      #haskellPackages.buchhaltung
     ] ++ gst_packages;
 
     darwin_packages = with pkgs.darwin.apple_sdk; [
@@ -45,6 +46,7 @@ let
       pkgs.clang-tools
       pkgs.cloc
       pkgs.coreutils
+      pkgs.fish-foreign-env
       pkgs.fzf
       pkgs.git
       pkgs.gnumake
@@ -67,7 +69,7 @@ let
     ];
 
     cpp_packages = [] ++
-      (if (builtins.hasAttr "cquery" pkgs.cpppkgs) then [ pkgs.cpppkgs.cquery ] else [])
+      (if (builtins.hasAttr "cpppkgs" pkgs) then [ pkgs.cpppkgs.cquery ] else [])
     ;
 
     python_packages = [
@@ -190,12 +192,22 @@ in
     sessionVariables = {
       EDITOR = "nvim";
       GS_OPTIONS = "-sPAPERSIZE=a4";
+      # Prevent clobbering SSH_AUTH_SOCK
+      GSM_SKIP_SSH_AGENT_WORKAROUND = "1";
     };
   };
 
   pam.sessionVariables = {
     EDITOR = "nvim";
   };
+
+
+  # Disable gnome-keyring ssh-agent
+  xdg.configFile."autostart/gnome-keyring-ssh.desktop".text = ''
+    ${pkgs.stdenv.lib.fileContents "${pkgs.gnome3.gnome-keyring}/etc/xdg/autostart/gnome-keyring-ssh.desktop"}
+    Hidden=true
+  '';
+
 
   #services.gpg-agent = {
   #  enable = true;
@@ -916,6 +928,7 @@ in
 
   home.file.".gdbinit".text = ''
     set history save on
+    set history filename $HOME/.local/var/gdb_history
   '';
 
   home.file.".ghci".text = ''
