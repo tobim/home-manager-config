@@ -9,7 +9,7 @@ let
       gst-ffmpeg
     ];
 
-    linux_packages = with pkgs; [
+    linux_packages = [
       pkgs.alacritty
       pkgs.aqbanking
       pkgs.chromium
@@ -246,6 +246,7 @@ in
         { names = [
           "ale"
           "deoplete-nvim"
+          "editorconfig-vim"
           "fugitive"
           "fzfWrapper"
           "fzf-vim"
@@ -321,9 +322,9 @@ in
             set backup
         endif
 
-        set exrc
-
         set noswapfile
+
+        set shell=${pkgs.bash}/bin/bash
 
         au BufEnter * let g:bufcwd = getcwd()
         "}}}
@@ -651,7 +652,10 @@ in
         call altr#remove_all()
         call altr#define('%/vast/%.hpp',
         \                '%/src/%.cpp',
-        \                '%/test/%.cpp') "}}}
+        \                '%/test/%.cpp') 
+        nmap <silent> gj <Plug>(altr-forward)
+        nmap <silent> gk <Plug>(altr-back)
+        "}}}
 
         " 'sjl/gundo.vim' "{{{
         "nnoremap <F5> :GundoToggle<CR> "}}}
