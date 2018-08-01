@@ -95,6 +95,16 @@ let
         };
       };
 
+      vim-altr = pkgs.vimUtils.buildVimPlugin {
+        name = "vim-altr";
+        src = pkgs.fetchFromGitHub {
+          owner = "kana";
+          repo = "vim-altr";
+          rev = "d5a9d857f3fdc0099ce6fac1add405a783952fa1";
+          sha256 = "1svr6b3wjmn4davwzxywpbyhdj601c556wmvyxqza4604ip6z4q7";
+        };
+      };
+
       vim-clang-format = pkgs.vimUtils.buildVimPlugin {
         name = "vim-clang-format";
         src = pkgs.fetchFromGitHub {
@@ -234,6 +244,7 @@ in
           "rhubarb"
           "vim-addon-nix"
           "vim-airline"
+          "vim-altr"
           "vim-clang-format"
           "vim-diminactive"
           "vim-easy-align"
@@ -624,6 +635,12 @@ in
         " 'mhinz/vim-signify' "{{{
         "let g:signify_sign_overwrite=0 "}}}
 
+        " 'kana/vim-altr' "{{{
+        call altr#remove_all()
+        call altr#define('%/vast/%.hpp',
+        \                '%/src/%.cpp',
+        \                '%/test/%.cpp') "}}}
+
         " 'sjl/gundo.vim' "{{{
         "nnoremap <F5> :GundoToggle<CR> "}}}
 
@@ -683,8 +700,8 @@ in
         nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
         nnoremap <silent> gr :call LanguageClient_textDocument_references()<CR>
         nnoremap <silent> gs :call LanguageClient_textDocument_documentSymbol()<CR>
-        nnoremap <silent> gf :call LanguageClient_textDocument_formatting()<CR>
-        vnoremap <silent> gf :call LanguageClient_textDocument_formatting()<CR>
+        nnoremap <silent> gF :call LanguageClient_textDocument_formatting()<CR>
+        vnoremap <silent> gF :call LanguageClient_textDocument_formatting()<CR>
         nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
         " }}}
 
