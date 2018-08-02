@@ -1,6 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
 let
+    on_darwin = builtins.currentSystem == "x86_64-darwin";
+    on_linux = builtins.currentSystem == "x86_64-linux";
     gst_packages = with pkgs; [
       gstreamer
       gst-plugins-good
@@ -183,17 +185,19 @@ in
 {
   home = {
     packages = default_packages ++ cpp_packages ++ python_packages ++
-      (if builtins.currentSystem == "x86_64-linux"
-      then linux_packages ++ home_packages
-      else if builtins.currentSystem == "x86_64-darwin"
-      then darwin_packages
+      (if on_linux then linux_packages ++ home_packages
+      else if on_darwin then darwin_packages
       else []);
 
     sessionVariables = {
+      VISUAL = "nvim";
       EDITOR = "nvim";
       GS_OPTIONS = "-sPAPERSIZE=a4";
       # Prevent clobbering SSH_AUTH_SOCK
       GSM_SKIP_SSH_AGENT_WORKAROUND = "1";
+
+    } // lib.optionalAttrs on_darwin {
+      SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
     };
   };
 
@@ -201,19 +205,18 @@ in
     EDITOR = "nvim";
   };
 
-
   # Disable gnome-keyring ssh-agent
-  xdg.configFile."autostart/gnome-keyring-ssh.desktop".text = ''
+  xdg.configFile."autostart/gnome-keyring-ssh.desktop".text = if on_linux then ''
     ${pkgs.stdenv.lib.fileContents "${pkgs.gnome3.gnome-keyring}/etc/xdg/autostart/gnome-keyring-ssh.desktop"}
     Hidden=true
-  '';
+  '' else "";
 
 
-  #services.gpg-agent = {
-  #  enable = true;
-  #  defaultCacheTtl = 1800;
-  #  enableSshSupport = true;
-  #};
+  services.gpg-agent = {
+    enable = on_linux;
+    defaultCacheTtl = 1800;
+    enableSshSupport = true;
+  };
 
   programs.zsh = {
     enable = true;
@@ -765,7 +768,7 @@ in
 
   };
 
-  programs.gnome-terminal = if builtins.currentSystem == "x86_64-linux" then {
+  programs.gnome-terminal = if on_linux then {
     enable = true;
     showMenubar = false;
     profile = {
@@ -925,6 +928,11 @@ in
   '';
 
   xdg.configFile."fish/config.fish".text = ''
+  set fish_function_path $fish_function_path ${pkgs.fish-foreign-env}/share/fish-foreign-env/functions
+
+  # source the NixOS environment config
+  fenv source "${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh"
+
   function fish_user_key_bindings
     bind . 'expand-dot-to-parent-directory-path'
   end
