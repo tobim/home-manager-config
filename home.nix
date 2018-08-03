@@ -265,6 +265,7 @@ in
           "vim-diminactive"
           "vim-easy-align"
           "vim-gitgutter"
+          "vim-localvimrc"
           "vim-operator-user"
           "vim-pasta"
           "vim-textobj-user"
@@ -585,6 +586,11 @@ in
         " => Plugin settings {{{
         """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+        " localvimrc "{{{
+        let g:localvimrc_persistent = 2
+        let g:localvimrc_persistence_file = expand(dataDir . '/localvimrc_persistent')
+        " }}}
+
         " deoplete.nvim "{{{
         let g:deoplete#enable_at_startup = 1
         " }}}
@@ -652,13 +658,15 @@ in
         "let g:signify_sign_overwrite=0 "}}}
 
         " 'kana/vim-altr' "{{{
-        call altr#remove_all()
-        call altr#define('%/vast/%.hpp',
-        \                '%/src/%.cpp',
-        \                '%/test/%.cpp') 
         nmap <silent> gj <Plug>(altr-forward)
         nmap <silent> gk <Plug>(altr-back)
         "}}}
+
+        " 'neoterm "{{{
+        let g:neoterm_autoscroll = 1
+        nnoremap <F3> :vertical :T make
+        nnoremap <F4> :vertical :T make test
+        " }}}
 
         " 'sjl/gundo.vim' "{{{
         "nnoremap <F5> :GundoToggle<CR> "}}}
