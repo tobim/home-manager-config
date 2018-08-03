@@ -64,6 +64,7 @@ let
       pkgs.pass
       pkgs.ripgrep
       pkgs.syncthing
+      pkgs.taskwarrior
       pkgs.tectonic
       pkgs.tmux
       pkgs.tree
@@ -664,8 +665,8 @@ in
 
         " 'neoterm "{{{
         let g:neoterm_autoscroll = 1
-        nnoremap <F3> :vertical :T make
-        nnoremap <F4> :vertical :T make test
+        nnoremap <F3> :vertical :T make<CR>
+        nnoremap <F4> :vertical :T make test<CR>
         " }}}
 
         " 'sjl/gundo.vim' "{{{
@@ -953,6 +954,19 @@ in
 
   home.file.".ghci".text = ''
     :set prompt "λ> "
+  '';
+
+  home.file.".taskrc".text = ''
+  data.location=~/.task
+
+  # Color theme (uncomment one to use)
+  #include /usr/share/doc/task/rc/light-16.theme
+
+  taskd.server=freecinc.com:53589
+  taskd.key=\/home\/tobim\/.task\/freecinc_8a28343b.key.pem
+  taskd.certificate=\/home\/tobim\/.task\/freecinc_8a28343b.cert.pem
+  taskd.ca=\/home\/tobim\/.task\/freecinc_8a28343b.ca.pem
+  taskd.credentials=FreeCinc\/freecinc_8a28343b\/453877b4-3a6f-4cbe-9cab-051435fa5827
   '';
 
   home.file."tobias.lco".text = ''
