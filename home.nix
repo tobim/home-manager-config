@@ -236,9 +236,15 @@ in
       grog = "log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)' ";
     };
     extraConfig=''
+      [merge]
+        tool = vimdiff
+      [mergetool]
+        prompt = true
+      [mergetool "vimdiff"]
+        cmd = nvim -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
       [transfer]
         fschkobjects = true
-      '';
+    '';
   };
 
   programs.neovim = {
