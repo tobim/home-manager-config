@@ -268,10 +268,14 @@ in
           "vim-gitgutter"
           "vim-localvimrc"
           "vim-operator-user"
+          "vim-pandoc"
+          "vim-pandoc-after"
+          "vim-pandoc-syntax"
           "vim-pasta"
           "vim-textobj-user"
           "vim-textobj-variable-segment"
           "vim-visual-star-search"
+          "vimtex"
           "flatlandia"
           "gruvbox"
         ]; }
@@ -654,6 +658,12 @@ in
         "let g:airline_powerline_fonts = 1
         "let g:airline#extensions#ale#enabled = 1
         " }}}
+
+        " 'mhinz/neovim-remote' "{{{
+        if has('nvim')
+          let $VISUAL = 'nvr -cc split --remote-wait'
+        endif
+        "}}}
 
         " 'mhinz/vim-signify' "{{{
         "let g:signify_sign_overwrite=0 "}}}
