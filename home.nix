@@ -198,7 +198,7 @@ in
       GSM_SKIP_SSH_AGENT_WORKAROUND = "1";
 
     } // lib.optionalAttrs on_darwin {
-      SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
+      SSH_AUTH_SOCK = "\${SSH_AUTH_SOCK:-$(gpgconf --list-dirs agent-ssh-socket)}";
     };
   };
 
