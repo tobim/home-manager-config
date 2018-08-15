@@ -11,6 +11,17 @@ let
       gst-ffmpeg
     ];
 
+    fonts = with pkgs; [
+      anonymousPro
+      dejavu_fonts
+      hack-font
+      nerdfonts
+      proggyfonts
+      roboto-mono
+      source-code-pro
+      unscii
+    ];
+
     linux_packages = [
       pkgs.alacritty
       pkgs.aqbanking
@@ -41,13 +52,14 @@ let
       pkgs.ncmpcpp
       pkgs.signal-desktop
       pkgs.youtube-dl
-    ];
+    ] ++ fonts;
 
     default_packages = [
       pkgs.cmake
       pkgs.clang-tools
       pkgs.cloc
       pkgs.coreutils
+      pkgs.direnv
       pkgs.fish-foreign-env
       pkgs.fzf
       pkgs.git
