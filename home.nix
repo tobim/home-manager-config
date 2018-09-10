@@ -59,6 +59,7 @@ let
       pkgs.clang-tools
       pkgs.cloc
       pkgs.coreutils
+      pkgs.cquery
       pkgs.direnv
       pkgs.fish-foreign-env
       pkgs.fzf
@@ -69,13 +70,14 @@ let
       pkgs.imagemagick
       pkgs.isync
       pkgs.keybase
+      pkgs.lnav
       pkgs.ncdu
       pkgs.neovim-remote
       pkgs.ninja
       pkgs.notmuch
       pkgs.pass
       pkgs.ripgrep
-      pkgs.syncthing
+      #pkgs.syncthing
       pkgs.taskwarrior
       pkgs.tectonic
       pkgs.tmux
@@ -917,9 +919,15 @@ in
   end
   '';
 
+  xdg.configFile."fish/functions/hm.fish".text = ''
+  function hm --description 'Invoke home-manager with personal nixpkgs'
+    home-manager -I nixpkgs="$HOME/projects/nixpkgs" $argv
+  end
+  '';
+
   xdg.configFile."fish/functions/mkcd.fish".text = ''
   function mkcd --description 'Create and enter a directory'
-  	mkdir -p $argv[1]; and cd $argv[1];
+    mkdir -p $argv[1]; and cd $argv[1];
   end
   '';
 
