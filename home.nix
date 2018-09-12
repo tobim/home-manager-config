@@ -55,6 +55,7 @@ let
     ] ++ fonts;
 
     default_packages = [
+      pkgs.ccls
       pkgs.cmake
       pkgs.clang-tools
       pkgs.cloc
@@ -622,7 +623,7 @@ in
 
         " fzf.vim "{{{
         command! -bang -nargs=* GGrep
-          \ call fzf#vim#grep('git grep --line-number '.shellescape(<q-args>), 0, <bang>0)
+          \ call fzf#vim#grep('git grep --recurse-submodules --line-number '.shellescape(<q-args>), 0, <bang>0)
 
         nnoremap [fzf] <Nop>
         nmap <space> [fzf]
@@ -738,8 +739,8 @@ in
         set hidden
 
         let g:LanguageClient_serverCommands = {
-            \ 'c': ['cquery', '--log-file=/tmp/cq.log'],
-            \ 'cpp': ['cquery', '--log-file=/tmp/cq.log'],
+            \ 'c': ['ccls', '--log-file=/tmp/ccls.log'],
+            \ 'cpp': ['ccls', '--log-file=/tmp/ccls.log'],
             \ 'haskell': ['hie', '--lsp'],
             \ 'javascript': ['/opt/javascript-typescript-langserver/lib/language-server-stdio.js'],
             \ 'python': ['pyls'],
