@@ -230,6 +230,72 @@ in
     enableSshSupport = true;
   };
 
+  programs.fish = {
+    enable = true;
+
+    shellAbbrs = {
+      gg = "git grep";
+    };
+
+    promptInit = ''
+      function fish_prompt
+        set -l last_status $status
+
+        if not set -q __fish_git_prompt_show_informative_status
+          set -g __fish_git_prompt_show_informative_status 1
+        end
+        if not set -q __fish_git_prompt_color_branch
+          set -g __fish_git_prompt_color_branch brmagenta
+        end
+        if not set -q __fish_git_prompt_showupstream
+          set -g __fish_git_prompt_showupstream "informative"
+        end
+        if not set -q __fish_git_prompt_showdirtystate
+          set -g __fish_git_prompt_showdirtystate "yes"
+        end
+        if not set -q __fish_git_prompt_color_stagedstate
+          set -g __fish_git_prompt_color_stagedstate yellow
+        end
+        if not set -q __fish_git_prompt_color_invalidstate
+          set -g __fish_git_prompt_color_invalidstate red
+        end
+        if not set -q __fish_git_prompt_color_cleanstate
+          set -g __fish_git_prompt_color_cleanstate brgreen
+        end
+
+        printf '%s%s %s%s%s%s ' (set_color $fish_color_host) (prompt_hostname) (set_color $fish_color_cwd) (prompt_pwd) (set_color normal) (__fish_git_prompt)
+
+        if not test $last_status -eq 0
+          set_color $fish_color_error
+        end
+        echo -n '$ '
+        set_color normal
+      end
+    '';
+
+    interactiveShellInit = ''
+      function mkcd --description 'Create and enter a directory'
+        mkdir -p $argv[1]; and cd $argv[1];
+      end
+
+      function expand-dot-to-parent-directory-path --description 'expand ... to ../.. etc'
+        # Get commandline up to cursor
+        set -l cmd (commandline --cut-at-cursor)
+
+        # Match last line
+        switch $cmd[-1]
+          case '*..'
+            commandline --insert '/..'
+          case '*'
+            commandline --insert '.'
+        end
+      end
+      function fish_user_key_bindings
+        bind . 'expand-dot-to-parent-directory-path'
+      end
+    '';
+  };
+
   programs.zsh = {
     enable = true;
   };
@@ -874,113 +940,113 @@ in
   color21 #ebdbb2
   '';
 
-  xdg.configFile."fish/functions/fish_prompt.fish".text = ''
-  function fish_prompt
-    set -l last_status $status
+  #xdg.configFile."fish/functions/fish_prompt.fish".text = ''
+  #function fish_prompt
+  #  set -l last_status $status
 
-    if not set -q __fish_git_prompt_show_informative_status
-      set -g __fish_git_prompt_show_informative_status 1
-    end
-    if not set -q __fish_git_prompt_color_branch
-      set -g __fish_git_prompt_color_branch brmagenta
-    end
-    if not set -q __fish_git_prompt_showupstream
-      set -g __fish_git_prompt_showupstream "informative"
-    end
-    if not set -q __fish_git_prompt_showdirtystate
-      set -g __fish_git_prompt_showdirtystate "yes"
-    end
-    if not set -q __fish_git_prompt_color_stagedstate
-      set -g __fish_git_prompt_color_stagedstate yellow
-    end
-    if not set -q __fish_git_prompt_color_invalidstate
-      set -g __fish_git_prompt_color_invalidstate red
-    end
-    if not set -q __fish_git_prompt_color_cleanstate
-      set -g __fish_git_prompt_color_cleanstate brgreen
-    end
+  #  if not set -q __fish_git_prompt_show_informative_status
+  #    set -g __fish_git_prompt_show_informative_status 1
+  #  end
+  #  if not set -q __fish_git_prompt_color_branch
+  #    set -g __fish_git_prompt_color_branch brmagenta
+  #  end
+  #  if not set -q __fish_git_prompt_showupstream
+  #    set -g __fish_git_prompt_showupstream "informative"
+  #  end
+  #  if not set -q __fish_git_prompt_showdirtystate
+  #    set -g __fish_git_prompt_showdirtystate "yes"
+  #  end
+  #  if not set -q __fish_git_prompt_color_stagedstate
+  #    set -g __fish_git_prompt_color_stagedstate yellow
+  #  end
+  #  if not set -q __fish_git_prompt_color_invalidstate
+  #    set -g __fish_git_prompt_color_invalidstate red
+  #  end
+  #  if not set -q __fish_git_prompt_color_cleanstate
+  #    set -g __fish_git_prompt_color_cleanstate brgreen
+  #  end
 
-    printf '%s%s %s%s%s%s ' (set_color $fish_color_host) (prompt_hostname) (set_color $fish_color_cwd) (prompt_pwd) (set_color normal) (__fish_git_prompt)
+  #  printf '%s%s %s%s%s%s ' (set_color $fish_color_host) (prompt_hostname) (set_color $fish_color_cwd) (prompt_pwd) (set_color normal) (__fish_git_prompt)
 
-    if not test $last_status -eq 0
-      set_color $fish_color_error
-    end
-    echo -n '$ '
-    set_color normal
-  end
-  '';
+  #  if not test $last_status -eq 0
+  #    set_color $fish_color_error
+  #  end
+  #  echo -n '$ '
+  #  set_color normal
+  #end
+  #'';
 
-  xdg.configFile."fish/functions/gg.fish".text = ''
-  function gg --description 'Alias for git grep'
-    git grep $argv
-  end
-  '';
+  #xdg.configFile."fish/functions/gg.fish".text = ''
+  #function gg --description 'Alias for git grep'
+  #  git grep $argv
+  #end
+  #'';
 
-  xdg.configFile."fish/functions/hm.fish".text = ''
-  function hm --description 'Invoke home-manager with personal nixpkgs'
-    home-manager -I nixpkgs="$HOME/projects/nixpkgs" $argv
-  end
-  '';
+  #xdg.configFile."fish/functions/hm.fish".text = ''
+  #function hm --description 'Invoke home-manager with personal nixpkgs'
+  #  home-manager -I nixpkgs="$HOME/projects/nixpkgs" $argv
+  #end
+  #'';
 
-  xdg.configFile."fish/functions/mkcd.fish".text = ''
-  function mkcd --description 'Create and enter a directory'
-    mkdir -p $argv[1]; and cd $argv[1];
-  end
-  '';
+  #xdg.configFile."fish/functions/mkcd.fish".text = ''
+  #function mkcd --description 'Create and enter a directory'
+  #  mkdir -p $argv[1]; and cd $argv[1];
+  #end
+  #'';
 
-  xdg.configFile."fish/functions/expand-dot-to-parent-directory-path.fish".text = ''
-  function expand-dot-to-parent-directory-path --description 'expand ... to ../.. etc'
-    # Get commandline up to cursor
-    set -l cmd (commandline --cut-at-cursor)
+  #xdg.configFile."fish/functions/expand-dot-to-parent-directory-path.fish".text = ''
+  #function expand-dot-to-parent-directory-path --description 'expand ... to ../.. etc'
+  #  # Get commandline up to cursor
+  #  set -l cmd (commandline --cut-at-cursor)
 
-    # Match last line
-    switch $cmd[-1]
-      case '*..'
-        commandline --insert '/..'
-      case '*'
-        commandline --insert '.'
-    end
-  end
-  '';
+  #  # Match last line
+  #  switch $cmd[-1]
+  #    case '*..'
+  #      commandline --insert '/..'
+  #    case '*'
+  #      commandline --insert '.'
+  #  end
+  #end
+  #'';
 
 
-  xdg.configFile."fish/functions/fzf-bcd-widget.fish".text = ''
-  function fzf-bcd-widget --description 'cd backwards'
-  	pwd | awk -v RS=/ '/\n/ {exit} {p=p $0 "/"; print p}' | tac | eval (__fzfcmd) +m --select-1 --exit-0 $FZF_BCD_OPTS | read -l result
-  	[ "$result" ]; and cd $result
-  	commandline -f repaint
-  end
-  '';
+  #xdg.configFile."fish/functions/fzf-bcd-widget.fish".text = ''
+  #function fzf-bcd-widget --description 'cd backwards'
+  #	pwd | awk -v RS=/ '/\n/ {exit} {p=p $0 "/"; print p}' | tac | eval (__fzfcmd) +m --select-1 --exit-0 $FZF_BCD_OPTS | read -l result
+  #	[ "$result" ]; and cd $result
+  #	commandline -f repaint
+  #end
+  #'';
 
-  xdg.configFile."fish/functions/fzf-cdhist-widget.fish".text = ''
-  function fzf-cdhist-widget --description 'cd to one of the previously visited locatiosn'
-  	# Clear non-existent folders from cdhist.
-  	set -l buf
-  	for i in (seq 1 (count $dirprev))
-  		set -l dir $dirprev[$i]
-  		if test -d $dir
-  			set buf $buf $dir
-  		end
-  	end
-  	set dirprev $buf
-  	string join \n $dirprev | tac | sed 1d | eval (__fzfcmd) +m --tiebreak=index --toggle-sort=ctrl-r $FZF_CDHIST_OPTS | read -l result
-  	[ "$result" ]; and cd $result
-  	commandline -f repaint
-  end
-  '';
+  #xdg.configFile."fish/functions/fzf-cdhist-widget.fish".text = ''
+  #function fzf-cdhist-widget --description 'cd to one of the previously visited locatiosn'
+  #	# Clear non-existent folders from cdhist.
+  #	set -l buf
+  #	for i in (seq 1 (count $dirprev))
+  #		set -l dir $dirprev[$i]
+  #		if test -d $dir
+  #			set buf $buf $dir
+  #		end
+  #	end
+  #	set dirprev $buf
+  #	string join \n $dirprev | tac | sed 1d | eval (__fzfcmd) +m --tiebreak=index --toggle-sort=ctrl-r $FZF_CDHIST_OPTS | read -l result
+  #	[ "$result" ]; and cd $result
+  #	commandline -f repaint
+  #end
+  #'';
 
-  xdg.configFile."fish/config.fish".text = ''
-  set fish_function_path $fish_function_path ${pkgs.fish-foreign-env}/share/fish-foreign-env/functions
+  #xdg.configFile."fish/config.fish".text = ''
+  #set fish_function_path $fish_function_path ${pkgs.fish-foreign-env}/share/fish-foreign-env/functions
 
-  # source the NixOS environment config
-  fenv source "${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh"
+  ## source the NixOS environment config
+  #fenv source "${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh"
 
-  function fish_user_key_bindings
-    bind . 'expand-dot-to-parent-directory-path'
-  end
+  #function fish_user_key_bindings
+  #  bind . 'expand-dot-to-parent-directory-path'
+  #end
 
-  eval (direnv hook fish)
-  '';
+  #eval (direnv hook fish)
+  #'';
 
   programs.direnv = {
     enable = true;
