@@ -55,6 +55,7 @@ let
     ] ++ fonts;
 
     default_packages = [
+      pkgs.any-nix-shell
       pkgs.ccls
       pkgs.cmake
       pkgs.clang-tools
@@ -237,6 +238,10 @@ in
       gg = "git grep";
     };
 
+    shellAliases = lib.optionalAttrs on_linux {
+      ip = "ip -br -c";
+    };
+
     promptInit = ''
       function fish_prompt
         set -l last_status $status
@@ -293,6 +298,8 @@ in
       function fish_user_key_bindings
         bind . 'expand-dot-to-parent-directory-path'
       end
+
+      any-nix-shell fish --info-right | source
     '';
   };
 
@@ -1210,4 +1217,31 @@ in
 
   programs.home-manager.enable = true;
   programs.home-manager.path = https://github.com/rycee/home-manager/archive/master.tar.gz;
+} // lib.optionalAttrs on_darwin {
+  xdg.configFile."homebrew/brewfile".text = ''
+    tap "homebrew/core"
+    tap "homebrew/bundle"
+    tap "homebrew/services"
+    tap "caskroom/cask"
+
+    brew "pinentry-mac"
+
+    cask "1password"
+    cask "firefox"
+    cask "google-drive-file-stream"
+    cask "hammerspoon"
+    cask "kitty"
+    cask "qlcolorcode"
+    cask "qlimagesize"
+    cask "qlmarkdown"
+    cask "qlprettypatch"
+    cask "qlstephen"
+    cask "quicklook-csv"
+    cask "quicklook-json"
+    cask "slack"
+    cask "suspicious-package"
+    cask "virtualbox"
+    cask "virtualbox-extension-pack"
+    cask "zoomus"
+  '';
 }
