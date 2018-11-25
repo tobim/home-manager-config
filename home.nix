@@ -329,6 +329,9 @@ in
       [transfer]
         fschkobjects = true
     '';
+    ignores = [
+      ".direnv/"
+    ];
   };
 
   programs.neovim = {
@@ -797,7 +800,7 @@ in
 
         " w0rp/ale "{{{
         let g:ale_c_build_dir = './'
-        let g:ale_linters = {'cpp': ['cppcheck', 'clangtidy']}
+        let g:ale_linters = {'cpp': ['cppcheck']}
         let g:ale_python_pylint_options = '--rcfile setup.cfg'
         nnoremap <silent> <C-p> <Plug>(ale_previous_wrap)
         nnoremap <silent> <C-n> <Plug>(ale_next_wrap)
@@ -808,8 +811,8 @@ in
         set hidden
 
         let g:LanguageClient_serverCommands = {
-            \ 'c': ['ccls', '--log-file=/tmp/ccls.log'],
-            \ 'cpp': ['ccls', '--log-file=/tmp/ccls.log'],
+            \ 'c': ['cquery', '--log-file=/tmp/cquery.log'],
+            \ 'cpp': ['cquery', '--log-file=/tmp/cquery.log'],
             \ 'haskell': ['hie', '--lsp'],
             \ 'javascript': ['/opt/javascript-typescript-langserver/lib/language-server-stdio.js'],
             \ 'python': ['pyls'],
