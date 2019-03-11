@@ -23,7 +23,6 @@ let
     ];
 
     linux_packages = [
-      pkgs.alacritty
       pkgs.aqbanking
       pkgs.chromium
       #pkgs.cutegram
@@ -55,14 +54,15 @@ let
     ] ++ fonts;
 
     default_packages = [
+      pkgs.alacritty
       pkgs.any-nix-shell
       pkgs.ccls
       pkgs.cmake
       pkgs.clang-tools
       pkgs.cloc
       pkgs.coreutils
-      pkgs.cquery
       pkgs.direnv
+      pkgs.fd
       pkgs.fish-foreign-env
       pkgs.fzf
       pkgs.git
@@ -71,6 +71,7 @@ let
       pkgs.htop
       pkgs.imagemagick
       pkgs.isync
+      pkgs.jq
       pkgs.keybase
       pkgs.lnav
       pkgs.ncdu
@@ -78,6 +79,7 @@ let
       pkgs.ninja
       pkgs.notmuch
       pkgs.pass
+      pkgs.passff-host
       pkgs.ripgrep
       #pkgs.syncthing
       pkgs.taskwarrior
@@ -89,8 +91,9 @@ let
 
     python_packages = [
       (pkgs.python3.withPackages (ps: with ps; [
+        black
         flake8
-        pylint
+        #pylint
         yapf
       ] ++
       (if (builtins.hasAttr "python-language-server" ps) then with ps;[
@@ -102,6 +105,16 @@ let
     ];
 
     customPlugins = {
+      distilled-vim = pkgs.vimUtils.buildVimPlugin {
+        name = "distilled-vim";
+        src = pkgs.fetchFromGitHub {
+          owner = "KKPMW";
+          repo = "distilled-vim";
+          rev = "9230a9b38547d70dbf7151ed87d6bf3b5102698b";
+          sha256 = "1sql18hj9lsfvcr7ja7jgagna4mcn9108wp3m97sq12c37ak2d5p";
+        };
+      };
+
       neoterm = pkgs.vimUtils.buildVimPlugin {
         name = "neoterm";
         src = pkgs.fetchFromGitHub {
@@ -203,6 +216,7 @@ in
       else []);
 
     sessionVariables = {
+      BLOCK_SIZE = "'1";
       VISUAL = "nvim";
       EDITOR = "nvim";
       GS_OPTIONS = "-sPAPERSIZE=a4";
@@ -314,6 +328,7 @@ in
     aliases = {
       st = "status --short --branch ";
       ci = "commit ";
+      bclean = ''!f() { git branch --merged $${1-master} | grep -v " $${1-master}$$" | xargs -r git branch -d; }; f'';
       amend = "commit --amend ";
       undo = "reset --soft HEAD^ ";
       glog = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' ";
@@ -343,6 +358,7 @@ in
         { names = [
           "ale"
           "deoplete-nvim"
+          "distilled-vim"
           "editorconfig-vim"
           "fugitive"
           "fzfWrapper"
@@ -352,7 +368,7 @@ in
           "neoterm"
           "purescript-vim"
           "rhubarb"
-          "vim-addon-nix"
+          #"vim-addon-nix"
           "vim-airline"
           "vim-altr"
           "vim-clang-format"
@@ -811,8 +827,8 @@ in
         set hidden
 
         let g:LanguageClient_serverCommands = {
-            \ 'c': ['cquery', '--log-file=/tmp/cquery.log'],
-            \ 'cpp': ['cquery', '--log-file=/tmp/cquery.log'],
+            \ 'c': ['ccls', '--log-file=/tmp/ccls.log'],
+            \ 'cpp': ['ccls', '--log-file=/tmp/ccls.log'],
             \ 'haskell': ['hie', '--lsp'],
             \ 'javascript': ['/opt/javascript-typescript-langserver/lib/language-server-stdio.js'],
             \ 'python': ['pyls'],
@@ -822,6 +838,7 @@ in
         " Automatically start language servers.
         let g:LanguageClient_autoStart = 1
         let g:LanguageClient_loadSettings = 1
+        let g:LanguageClient_hasSnippetSupport = 0
         " Use an absolute configuration path if you want system-wide settings
         let g:LanguageClient_settingsPath = '/home/tobim/.config/nvim/settings.json'
         set completefunc=LanguageClient#complete
@@ -834,6 +851,43 @@ in
         nnoremap <silent> gF :call LanguageClient_textDocument_formatting()<CR>
         vnoremap <silent> gF :call LanguageClient_textDocument_formatting()<CR>
         nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
+
+        nnoremap <silent> zk :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'L'})<cr>
+        nnoremap <silent> zl :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'D'})<cr>
+        nnoremap <silent> zh :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'U'})<cr>
+        nnoremap <silent> xj :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'R'})<cr>
+
+        " bases
+        nn <silent> zb :call LanguageClient#findLocations({'method':'$ccls/inheritance'})<cr>
+        " bases of up to 3 levels
+        nn <silent> zB :call LanguageClient#findLocations({'method':'$ccls/inheritance','levels':3})<cr>
+        " derived
+        nn <silent> zd :call LanguageClient#findLocations({'method':'$ccls/inheritance','derived':v:true})<cr>
+        " derived of up to 3 levels
+        nn <silent> zD :call LanguageClient#findLocations({'method':'$ccls/inheritance','derived':v:true,'levels':3})<cr>
+
+        " caller
+        nn <silent> zc :call LanguageClient#findLocations({'method':'$ccls/call'})<cr>
+        " callee
+        nn <silent> zC :call LanguageClient#findLocations({'method':'$ccls/call','callee':v:true})<cr>
+
+        " $ccls/member
+        " nested classes / types in a namespace
+        nn <silent> zs :call LanguageClient#findLocations({'method':'$ccls/member','kind':2})<cr>
+        " member functions / functions in a namespace
+        nn <silent> zf :call LanguageClient#findLocations({'method':'$ccls/member','kind':3})<cr>
+        " member variables / variables in a namespace
+        nn <silent> zm :call LanguageClient#findLocations({'method':'$ccls/member'})<cr>
+
+        augroup LanguageClient_config
+          au!
+          au BufEnter * let b:Plugin_LanguageClient_started = 0
+          au User LanguageClientStarted setl signcolumn=yes
+          au User LanguageClientStarted let b:Plugin_LanguageClient_started = 1
+          au User LanguageClientStopped setl signcolumn=auto
+          au User LanguageClientStopped let b:Plugin_LanguageClient_stopped = 0
+          au CursorMoved * if b:Plugin_LanguageClient_started | sil call LanguageClient#textDocument_documentHighlight() | endif
+        augroup END
         " }}}
 
         " 'w0rp/ale' "{{{
@@ -910,7 +964,7 @@ in
   } else {};
 
   xdg.configFile."kitty/kitty.conf".text = ''
-  include $HOME/misc/base16-kitty/base16-gruvbox-dark-medium-256.conf
+  include $${HOME}/misc/base16-kitty/base16-gruvbox-dark-medium-256.conf
 
   # Base16 Gruvbox dark, medium - kitty color config
   # Dawid Kurek (dawikur@gmail.com), morhetz (https://github.com/morhetz/gruvbox)
@@ -1230,6 +1284,7 @@ in
     brew "pinentry-mac"
 
     cask "1password"
+    cask "docker"
     cask "firefox"
     cask "google-drive-file-stream"
     cask "hammerspoon"
