@@ -8,7 +8,7 @@ let
       gst-plugins-good
       gst-plugins-bad
       gst-plugins-ugly
-      gst-ffmpeg
+      #gst-ffmpeg
     ];
 
     fonts = with pkgs; [
@@ -28,12 +28,12 @@ let
       #pkgs.cutegram
       pkgs.dtrx
       pkgs.firefox
+      pkgs.gnome3.glib-networking
       pkgs.gparted
       pkgs.kbfs
-      pkgs.meld
+      #pkgs.meld
       pkgs.okular
       pkgs.qutebrowser
-      pkgs.pdfshuffler
       pkgs.xournal
       pkgs.xsel
       #haskellPackages.buchhaltung
@@ -51,7 +51,7 @@ let
       pkgs.ncmpcpp
       pkgs.signal-desktop
       pkgs.youtube-dl
-    ] ++ fonts;
+    ];
 
     default_packages = [
       pkgs.alacritty
@@ -62,6 +62,7 @@ let
       pkgs.cloc
       pkgs.coreutils
       pkgs.direnv
+      pkgs.exa
       pkgs.fd
       pkgs.fish-foreign-env
       pkgs.fzf
@@ -81,7 +82,7 @@ let
       pkgs.pass
       pkgs.passff-host
       pkgs.ripgrep
-      #pkgs.syncthing
+      pkgs.syncthing
       pkgs.taskwarrior
       pkgs.tectonic
       pkgs.tmux
@@ -210,7 +211,7 @@ let
 in
 {
   home = {
-    packages = default_packages ++ python_packages ++
+    packages = default_packages ++ python_packages ++ fonts ++
       (if on_linux then linux_packages ++ home_packages
       else if on_darwin then darwin_packages
       else []);
@@ -225,6 +226,18 @@ in
 
     } // lib.optionalAttrs on_darwin {
       SSH_AUTH_SOCK = "\${SSH_AUTH_SOCK:-$(gpgconf --list-dirs agent-ssh-socket)}";
+    };
+  };
+
+  accounts.email.accounts = {
+    fastmail = {
+      primary = true;
+      address = "tobim@fastmail.fm";
+      mbsync = {
+        enable = true;
+        create = "maildir";
+        expunge = "both";
+      };
     };
   };
 
@@ -244,6 +257,8 @@ in
     defaultCacheTtl = 1800;
     enableSshSupport = true;
   };
+
+  services.syncthing.enable = on_linux;
 
   programs.fish = {
     enable = true;
@@ -328,7 +343,20 @@ in
     aliases = {
       st = "status --short --branch ";
       ci = "commit ";
-      bclean = ''!f() { git branch --merged $${1-master} | grep -v " $${1-master}$$" | xargs -r git branch -d; }; f'';
+      bclean = ''
+        "!f() { \
+           force=F;\
+           while getopts \"f\" opt; do\
+             case \"$opt\" in f) force=T;;\
+             esac;\
+           done;\
+           shift $(expr $OPTIND - 1);\
+           cmd=(-L 1 echo);\
+           if [ \"$force\" = \"T\" ]; then\
+             cmd=(git branch -d);\
+           fi;\
+           git branch --merged ''${1-master} | grep -v \" ''${1-master}$\" | xargs -r ''${cmd[@]}; };\
+         f"'';
       amend = "commit --amend ";
       undo = "reset --soft HEAD^ ";
       glog = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' ";
@@ -1301,5 +1329,17 @@ in
     cask "virtualbox"
     cask "virtualbox-extension-pack"
     cask "zoomus"
+  '';
+  xdg.configFile."wireguard/wg0.conf".text = ''
+    [Interface]
+    Address = 10.100.0.3
+    PostUp = wg set %i private-key <(pass wireguard/tenzir-darwin/private/%i)
+    ListenPort = 51820
+    [Peer]
+    PublicKey = e1CJc1Nkprw5g9KNRNokoqWFEfnFi+nO6wMAm/CjDWI=
+    AllowedIPs = 0.0.0.0
+    Endpoint = p5sjwjau98.crabdance.com:51820
+    # This is for if you’re behind a NAT and want the connection to be kept alive.
+    PersistentKeepalive = 25
   '';
 }
