@@ -1,6 +1,20 @@
 { pkgs, lib, config, ... }:
 
 let
+    clangPredicate = n: _: with pkgs.lib; with builtins;
+      hasPrefix "clang_" n && !(hasPrefix "clang_3" n);
+    clangs = pkgs.lib.filterAttrs clangPredicate pkgs
+      // { inherit (pkgs) clang; };
+
+    clang-tools-wrapper = let
+      wrapCC = cc: pkgs.callPackage ./clang-tools-wrapper.nix {
+        inherit cc;
+      };
+    in pkgs.lib.mapAttrs (_: v: wrapCC v) clangs // {
+      inherit wrapCC;
+      recurseForDerivations = true;
+    };
+
     on_darwin = builtins.currentSystem == "x86_64-darwin";
     on_linux = builtins.currentSystem == "x86_64-linux";
     gst_packages = with pkgs; [
@@ -26,15 +40,13 @@ let
     linux_packages = [
       pkgs.aqbanking
       pkgs.chromium
-      #pkgs.cutegram
       pkgs.dtrx
       pkgs.gnome3.glib-networking
       pkgs.gparted
       pkgs.kbfs
-      #pkgs.meld
+      pkgs.meld
       pkgs.numix-cursor-theme
       pkgs.numix-icon-theme
-      #pkgs.okular
       pkgs.qutebrowser
       pkgs.waybar
       pkgs.wl-clipboard
@@ -54,6 +66,7 @@ let
       pkgs.ncmpcpp
       pkgs.signal-desktop
       pkgs.youtube-dl
+      #pkgs.zoom-us
     ];
 
     default_packages = [
@@ -61,17 +74,21 @@ let
       pkgs.any-nix-shell
       pkgs.ccls
       pkgs.cmake
-      pkgs.clang-tools
+      clang-tools-wrapper.clang_8
+      #pkgs.clang-tools
       pkgs.cloc
       pkgs.coreutils
       pkgs.direnv
       pkgs.exa
       pkgs.fd
+      pkgs.file
       pkgs.fish-foreign-env
       pkgs.fzf
       pkgs.git
       pkgs.gitAndTools.git-gone
       pkgs.gitAndTools.git-recent
+      pkgs.gitAndTools.hub
+      pkgs.git-revise
       pkgs.gnumake
       pkgs.pinentry_ncurses
       pkgs.htop
@@ -80,6 +97,8 @@ let
       pkgs.jq
       pkgs.keybase
       pkgs.lnav
+      pkgs.nixfmt
+      pkgs.nixpkgs-fmt
       pkgs.ncdu
       pkgs.neovim-remote
       pkgs.ninja
@@ -98,7 +117,7 @@ let
       (pkgs.python3.withPackages (ps: with ps; [
         black
         flake8
-        #pylint
+        pylint
         yapf
       ] ++
       (if (builtins.hasAttr "python-language-server" ps) then with ps;[
@@ -109,108 +128,6 @@ let
       ] else [])))
     ];
 
-    customPlugins = {
-      distilled-vim = pkgs.vimUtils.buildVimPlugin {
-        name = "distilled-vim";
-        src = pkgs.fetchFromGitHub {
-          owner = "KKPMW";
-          repo = "distilled-vim";
-          rev = "9230a9b38547d70dbf7151ed87d6bf3b5102698b";
-          sha256 = "1sql18hj9lsfvcr7ja7jgagna4mcn9108wp3m97sq12c37ak2d5p";
-        };
-      };
-
-      neoterm = pkgs.vimUtils.buildVimPlugin {
-        name = "neoterm";
-        src = pkgs.fetchFromGitHub {
-          owner = "kassio";
-          repo = "neoterm";
-          rev = "287eb27d0a21d81c92c1183a5527e1ff0fdc95cb";
-          sha256 = "06ny9khdyckszxr77w13hsw2jlf92caifr8x382cda2v2vq3jz4n";
-        };
-      };
-
-      vim-altr = pkgs.vimUtils.buildVimPlugin {
-        name = "vim-altr";
-        src = pkgs.fetchFromGitHub {
-          owner = "kana";
-          repo = "vim-altr";
-          rev = "d5a9d857f3fdc0099ce6fac1add405a783952fa1";
-          sha256 = "1svr6b3wjmn4davwzxywpbyhdj601c556wmvyxqza4604ip6z4q7";
-        };
-      };
-
-      vim-clang-format = pkgs.vimUtils.buildVimPlugin {
-        name = "vim-clang-format";
-        src = pkgs.fetchFromGitHub {
-          owner = "rhysd";
-          repo = "vim-clang-format";
-          rev = "8ff1660a1e9f856479fffe693743521f4f3068cb";
-          sha256 = "1g9vs6cg7irmwqa1lz6i7xbq50svykhvax12vx7cpf2bxs8jfp3n";
-        };
-      };
-
-      vim-diminactive = pkgs.vimUtils.buildVimPlugin {
-        name = "vim-diminactive";
-        src = pkgs.fetchFromGitHub {
-          owner = "blueyed";
-          repo = "vim-diminactive";
-          rev = "6f2e14e6ff6a038285937c378ec3685e6ff7ee36";
-          sha256 = "14jf5hh3v2f5wb10v09ygx15pxbwziv20pwv0fqkakxwf0vqwd50";
-        };
-        buildPhase = "true";
-      };
-
-      vim-pasta = pkgs.vimUtils.buildVimPlugin {
-        name = "vim-pasta";
-        src = pkgs.fetchFromGitHub {
-          owner = "sickill";
-          repo = "vim-pasta";
-          rev = "f77cc5d68ce70a53cd02798a98da997376d62188";
-          sha256 = "1qip74zqknsajgrp8lcrpwgs1jiiy06d5pf5r123zq7g5di196dq";
-        };
-      };
-
-      vim-textobj-user = pkgs.vimUtils.buildVimPlugin {
-        name = "vim-textobj-user";
-        src = pkgs.fetchFromGitHub {
-          owner = "kana";
-          repo = "vim-textobj-user";
-          rev = "e231b65797b5765b3ee862d71077e9bd56f3ca3e";
-          sha256 = "0zsgr2cn8s42d7jllnxw2cvqkl27lc921d1mkph7ny7jgnghaay9";
-        };
-      };
-
-      vim-visual-star-search = pkgs.vimUtils.buildVimPlugin {
-        name = "vim-visual-star-search";
-        src = pkgs.fetchFromGitHub {
-          owner = "bronson";
-          repo = "vim-visual-star-search";
-          rev = "fa55818903301d61cef67341d3524a63a14bc033";
-          sha256 = "1ny6sdl08mbh5j3fvsznlgxdv2hip190dmsgs22gygn8wpj2xc8l";
-        };
-      };
-
-      vim-textobj-variable-segment = pkgs.vimUtils.buildVimPlugin {
-        name = "vim-textobj-variable-segment";
-        src = pkgs.fetchFromGitHub {
-          owner = "Julian";
-          repo = "vim-textobj-variable-segment";
-          rev = "6c60e9b831961f9ed6bc4ff229792745747de3e8";
-          sha256 = "0q9n781nv3pk1hvc02034gpyd395n7qzhk8cka2ydd5z31zg2dgf";
-        };
-      };
-
-      flatlandia = pkgs.vimUtils.buildVimPlugin {
-        name = "flatlandia";
-        src = pkgs.fetchFromGitHub {
-          owner = "jordwalke";
-          repo = "flatlandia";
-          rev = "05069c3777c463b25b609dca8dccacf9f75e2ce3";
-          sha256 = "04mk80zaxjxh9hdy9ll12ri9pq6s0p0lz1myg7yfz8rgyd74kaqz";
-        };
-      };
-    };
 
 in
 {
@@ -380,6 +297,7 @@ in
       undo = "reset --soft HEAD^ ";
       glog = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' ";
       grog = "log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)' ";
+      #sub = "!f() { git grep -l $1 | xargs sed -i 's|$1|$2|g' }; f"
     };
     extraConfig=''
       [merge]
@@ -396,590 +314,7 @@ in
     ];
   };
 
-  programs.neovim = {
-    enable = true;
-
-    configure = {
-      vam.knownPlugins = pkgs.vimPlugins // customPlugins;
-      vam.pluginDictionaries = [
-        { names = [
-          "ale"
-          "deoplete-nvim"
-          "distilled-vim"
-          "editorconfig-vim"
-          "fugitive"
-          "fzfWrapper"
-          "fzf-vim"
-          "idris-vim"
-          "LanguageClient-neovim"
-          "neoterm"
-          "purescript-vim"
-          "rhubarb"
-          #"vim-addon-nix"
-          "vim-airline"
-          "vim-altr"
-          "vim-clang-format"
-          "vim-diminactive"
-          "vim-easy-align"
-          "vim-gitgutter"
-          "vim-localvimrc"
-          "vim-operator-user"
-          "vim-pandoc"
-          "vim-pandoc-after"
-          "vim-pandoc-syntax"
-          "vim-pasta"
-          "vim-textobj-user"
-          "vim-textobj-variable-segment"
-          "vim-visual-star-search"
-          "vimtex"
-          "flatlandia"
-          "gruvbox"
-        ]; }
-      ];
-
-      customRC = ''
-        "" => General {{{
-        """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-        "" sets how many lines of history VIM has to remember
-        "set history=1000
-
-        "" reload an open file if it is changed from outside
-        set autoread
-
-        "" don't update the display while executing macros
-        set lazyredraw
-
-        "" vim sets terminal title
-        "set title
-
-
-        "set helplang=en
-
-        "" remove trailing whitespaces on save
-        "" autocmd BufRead,BufWritePre * if ! &bin | silent! %s/\s\+$// | endif
-
-        "" search from current directory upwards for ctags file
-        set tags+=tags;/
-
-        "" ignore the following file endings completely
-        set wildignore=*.swp,*.o,*.oo,*.pyc,*.info,*.aux,*.dvi,*.bbl,*.blg
-        set wildignore+=*.brf,*.cb,*.ind,*.idx,*.ilg,*.inx,*.out,*.toc
-        set wildignore+=*/tmp/*,*.so,*.a,*.la,*.zip,*.bz2,*.gz,*.tar
-
-        "" give the following file endings less priority
-        "set suffixes=.bak,~,.log,.h,.P
-
-        " Put plugins and dictionaries in this dir (also on Windows)
-        let dataDir = $HOME.'/.local/share/nvim'
-        call mkdir(dataDir, 'p')
-
-        " Save central undo files
-        if has('persistent_undo')
-            let dir_ = expand(dataDir . '/undo')
-            call mkdir(dir_, 'p')
-            let &undodir = dir_
-            set undofile
-        endif
-        if has('write_backup')
-            let dir_ = expand(dataDir . '/backup')
-            call mkdir(dir_, 'p')
-            let &backupdir = dir_
-            set backup
-        endif
-
-        set noswapfile
-
-        set shell=${pkgs.bash}/bin/bash
-
-        au BufEnter * let g:bufcwd = getcwd()
-        "}}}
-
-        " => VIM user interface {{{
-        """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-        " enable syntax highlighting
-        syntax enable
-
-        " set colors and font according to preferences
-        "colorscheme desert_mod
-        "colorscheme desert
-        "set termguicolors
-        set background=dark
-        "let g:gruvbox_italic=1
-        colorscheme gruvbox
-        " set guifont=Anonymous\ Pro\ 11
-        " set guifont=Anonymous\ Pro\ for\ Powerline\ 11
-        "set guifont=DejaVu\ Sans\ Mono\ 11
-
-        " Set 7 lines to the cursor - when moving vertically using j/k
-        set so=7
-
-        " allow mouse interaction
-        "set mouse=a
-
-        " enable the pop-up-list for command and argument completion in
-        " command mode
-        set wildmenu
-        set wildmode=list:longest,full
-
-        " show the current cursor position (line,column and file %)
-        set ruler
-
-        " do not ask for confirmation after displaying messages
-        set shortmess+=filmnrxoOtT
-
-        " make the command bar 2 lines high
-        set cmdheight=2
-
-        " Always draw the signcolumn
-        set signcolumn=yes
-
-        " highlight current line
-        set cursorline
-
-        " let backspace traverse line breaks and delete indentations
-        " in indentation step size (tabstop)
-        set backspace=indent,eol,start
-
-        " enable case sensitive searches when the search term contains
-        " upper case characters, otherwise not
-        set ignorecase
-        set smartcase
-
-        " highlight search results
-        set hlsearch
-        " search as you type
-        set incsearch
-
-        "if executable('ag')
-        "  set grepprg=ag\ --nogroup\ --column\ --smart-case\ --nocolor\ --follow\ --ignore\ tags
-        "  set grepformat=%f:%l:%c:%m
-        "elseif executable('ack')
-        "  set grepprg=ack\ --nogroup\ --column\ --smart-case\ --nocolor\ --follow\ $*
-        "  set grepformat=%f:%l:%c:%m
-        "elseif executable('ack-grep')
-        "  set grepprg=ack\ --nogroup\ --column\ --smart-case\ --nocolor\ --follow\ $*
-        "  set grepformat=%f:%l:%c:%m
-        "endif
-
-        "" enable auto indentation and set tab width
-        set smartindent
-        set shiftwidth=4
-        set softtabstop=4
-        set tabstop=4
-
-        " always convert tabs to spaces
-        set expandtab
-
-        " wrap lines to indentation
-        "set breakindent
-        "set breakindentopt=shift:-1
-
-        " set \m to default for regexes
-        " set magic " this is the default
-
-        " always draw a status line
-        set laststatus=2
-
-        " the mode is indicated by powerline if available
-        "set noshowmode
-
-        " enable extended % matching
-        "runtime macros/matchit.vim
-
-        " highlight matching ()[]{}...
-        "set showmatch
-
-        " time to wait until swap file is written / cursorhold autocomd is fired
-        "set updatetime=300
-
-        " the timeout for key combinations and mappings
-        "set timeoutlen=300
-
-        " Writes to the unnamed register also writes to the * and + registers. This
-        " makes it easy to interact with the system clipboard
-        if has ('unnamedplus')
-          set clipboard=unnamedplus
-        else
-          set clipboard=unnamed
-        endif
-
-        " do not beep or flash
-        " important: t_vb= must be set in gvimrc as well!
-        set noerrorbells
-        set visualbell
-        set t_vb=
-
-        "if has ('ballooneval')
-        "  set balloondelay=100
-        "endif
-        "set noequalalways
-
-        if exists('&inccommand')
-          set inccommand=split
-        endif
-
-        set list listchars=tab:¦\ ,trail:˽
-        ""set listchars=tab:▶\ ,eol:★
-        ""set listchars+=trail:◥
-        "set listchars+=extends:❯ "〉
-        "set listchars+=precedes:❮
-        "  "if has('conceal')
-          "  set conceallevel=1
-          "  set listchars+=conceal:Δ
-          "endif
-        " Mark lines that have been wrapped
-        "set showbreak=↪
-
-        set splitbelow
-        set splitright
-
-        "if has('gui_running')
-        "" open maximized
-        "    "set lines=999 columns=9999
-        "    "if s:is_windows
-        "    "  autocmd GUIEnter * simalt ~x
-        "    "endif
-
-        "    set guioptions+=t "tear off menu items
-        "    set guioptions-=T "toolbar icons
-
-        "    "if s:is_macvim
-        "    "  set gfn=Ubuntu_Mono:h14
-        "    "  set transparency=2
-        "    "endif
-
-        "    "if s:is_windows
-        "    "  set gfn=Ubuntu_Mono:h10
-        "    "endif
-
-        "    "if has('gui_gtk')
-        "    "  set gfn=Ubuntu\ Mono\ 11
-        "    "endif
-        "else
-        "  if $COLORTERM == 'gnome-terminal'
-        "    set t_Co=256 "why you no tell me correct colors?!?!
-        "  endif
-        "  if $TERM_PROGRAM == 'iTerm.app'
-        "" different cursors for insert vs normal mode
-        "    if exists('$TMUX')
-        "      let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
-        "      let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
-        "    else
-        "      let &t_SI = "\<Esc>]50;CursorShape=1\x7"
-        "      let &t_EI = "\<Esc>]50;CursorShape=0\x7"
-        "    endif
-        "  endif
-        "endif
-        ""}}}
-
-        " => Keymappings {{{
-        """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-        let mapleader = ","
-        let g:mapleader = ","
-        let maplocalleader = ";"
-
-        " Y yanks from cursor to $
-        map Y y$
-
-        " If you like control + vim direction key to navigate
-        " windows then perform the remapping
-        "
-        noremap <C-J> <C-W>j
-        noremap <C-K> <C-W>k
-        noremap <C-H> <C-W>h
-        noremap <C-L> <C-W>l
-
-        " lookup vim help for the word under cursor
-        noremap <leader>h : help <C-R>=expand("<cword>")<CR><CR><C-W>p
-
-        " overwrite selection and preserve the default register
-        vnoremap <leader>p "_dP
-
-        " fast saving
-        nnoremap <leader>w :w!<cr>
-
-        " press j+k to escape from insert mode
-        inoremap jk <ESC>
-        inoremap kj <ESC>
-
-        " close terminal with esc...
-        tnoremap <ESC> <C-\><C-n>
-        tnoremap jk <C-\><C-n>
-        tnoremap jk <C-\><C-n>
-
-        " append current line to the next
-        nnoremap <leader>J :m+1<CR>kJ
-
-        command! -nargs=+ Cppman silent! call system("tmux split-window cppman " . expand(<q-args>))
-        autocmd FileType cpp nnoremap <silent><buffer> K <Esc>:Cppman <cword><CR>
-        " }}}
-
-        " => Command-line Mode keymappings {{{
-        """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-        " Bash like keys for the command line. These resemble personal zsh mappings
-        cnoremap <c-a> <home>
-        cnoremap <c-e> <end>
-
-        " Ctrl-[hl]: Move left/right by word
-        cnoremap <c-h> <s-left>
-        cnoremap <c-l> <s-right>
-
-        " Ctrl-Space: Show history
-        cnoremap <c-@> <c-f>
-
-        cnoremap <c-j> <down>
-        cnoremap <c-k> <up>
-        cnoremap <c-f> <left>
-        cnoremap <c-g> <right>
-
-        " Ctrl-Delete: Delete previous word. HACK ALERT! Ctrl-Delete sends d in iTerm2
-        cnoremap <c-d> <c-w>
-
-        " Ctrl-v: Paste
-        cnoremap <c-v> <c-r>"
-
-        " press j+k to escape from insert mode
-        cnoremap jk <C-c>
-        cnoremap kj <C-c>
-        " }}}
-
-        " => Plugin settings {{{
-        """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-        " localvimrc "{{{
-        let g:localvimrc_persistent = 2
-        let g:localvimrc_persistence_file = expand(dataDir . '/localvimrc_persistent')
-        " }}}
-
-        " deoplete.nvim "{{{
-        let g:deoplete#enable_at_startup = 1
-        " }}}
-
-        " fzf.vim "{{{
-        command! -bang -nargs=* GGrep
-          \ call fzf#vim#grep('git grep --recurse-submodules --line-number '.shellescape(<q-args>), 0, <bang>0)
-
-        nnoremap [fzf] <Nop>
-        nmap <space> [fzf]
-        nnoremap <silent> [fzf]f :Files<CR>
-        nnoremap <silent> [fzf]a :Buffers<CR>
-        nnoremap <silent> [fzf]m :History<CR>
-        nnoremap <silent> [fzf]g :GGrep<CR>
-        nnoremap <silent> [fzf]h :Helptags<CR>
-        " }}}
-
-        " denite.nvim "{{{
-
-        " " Change mappings
-        " "call denite#custom#map('insert', 'jk', 'leave-mode')
-        " "call denite#custom#map('insert', 'kj', 'leave-mode')
-        "
-        " " Map space to the prefix for Denite
-        " nnoremap [denite] <Nop>
-        " nmap <space> [denite]
-        "
-        " " use git file list if in git directory
-        " call denite#custom#alias('source', 'file_rec/git', 'file_rec')
-        " call denite#custom#var('file_rec/git', 'command', ['git', 'ls-files', '-co', '--exclude-standard'])
-        " nnoremap <silent> [denite]f :<C-u>Denite `finddir('.git', ';') != ''' ? 'file_rec/git' : 'file_rec'`<CR>
-        "
-        " " Quick MRU search
-        " nnoremap <silent> [denite]m :<C-u>Denite -buffer-name=mru file_mru<CR>
-        "
-        " " Quick buffer change
-        " nnoremap <silent> [denite]s :<C-u>Denite buffer<CR>
-        "
-        " " Quick registers
-        " nnoremap <silent> [denite]r :<C-u>Denite -buffer-name=register register<CR>
-        "
-        " " Quick buffer and mru
-        " "nnoremap <silent> [denite]u :<C-u>Denite -buffer-name=buffers buffer file_mru<CR>
-        "
-        " " Quick yank history
-        " nnoremap <silent> [denite]y :<C-u>Denite -buffer-name=yanks history/yank<CR>
-        "
-        " " Quick outline
-        " "nnoremap <silent> [denite]o :<C-u>Denite -vertical -buffer-name=outline outline<cr>
-        "
-        " " Quick sessions (projects)
-        " nnoremap <silent> [denite]p :<C-u>Denite -buffer-name=sessions session<CR>
-        "
-        " " Quick sources
-        " "nnoremap <silent> [denite]a :<C-u>Denite -buffer-name=sources source<CR>
-
-        " }}}
-
-        " vim-airline "{{{
-        "let g:airline_powerline_fonts = 1
-        "let g:airline#extensions#ale#enabled = 1
-        " }}}
-
-        " 'mhinz/neovim-remote' "{{{
-        if has('nvim')
-          let $VISUAL = 'nvr -cc split --remote-wait'
-        endif
-        "}}}
-
-        " 'mhinz/vim-signify' "{{{
-        "let g:signify_sign_overwrite=0 "}}}
-
-        " 'kana/vim-altr' "{{{
-        nmap <silent> gj <Plug>(altr-forward)
-        nmap <silent> gk <Plug>(altr-back)
-        "}}}
-
-        " 'neoterm "{{{
-        let g:neoterm_autoscroll = 1
-        nnoremap <F3> :vertical :T make<CR>
-        nnoremap <F4> :vertical :T make test<CR>
-        " }}}
-
-        " 'sjl/gundo.vim' "{{{
-        "nnoremap <F5> :GundoToggle<CR> "}}}
-
-        " 'junegunn/vim-easy-align' "{{{
-            " Start interactive EasyAlign in visual mode
-            "vmap <Enter> <Plug>(EasyAlign)
-            " Start interactive EasyAlign with a Vim movement
-            "nmap <Leader>a <Plug>(EasyAlign) "}}}
-
-        " 'rhysd/vim-clang-format' "{{{
-        let g:clang_format#detect_style_file = 1
-        " map to <Leader>cf in C++ code
-        autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :<C-u>ClangFormat<CR>
-        autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
-        " if you install vim-operator-user
-        autocmd FileType c,cpp,objc map <buffer><Leader>x <Plug>(operator-clang-format)
-        "}}}
-
-        " 'jpalardy/vim-slime' "{{{
-        "let g:slime_target = "tmux"
-        " }}}
-
-        " 'shumphrey/fugitive-gitlab.vim' "{{{
-        "let g:fugitive_gitlab_domains = ['http://jkmchnx.fe.hhi.de:8001']
-        " }}}
-
-        " w0rp/ale "{{{
-        let g:ale_c_build_dir = './'
-        let g:ale_linters = {'cpp': ['cppcheck']}
-        let g:ale_python_pylint_options = '--rcfile setup.cfg'
-        nnoremap <silent> <C-p> <Plug>(ale_previous_wrap)
-        nnoremap <silent> <C-n> <Plug>(ale_next_wrap)
-        " }}}
-
-        " {{{
-        " Required for operations modifying multiple buffers like rename.
-        set hidden
-
-        let g:LanguageClient_serverCommands = {
-            \ 'c': ['ccls', '--log-file=/tmp/ccls.log'],
-            \ 'cpp': ['ccls', '--log-file=/tmp/ccls.log'],
-            \ 'haskell': ['hie', '--lsp'],
-            \ 'javascript': ['/opt/javascript-typescript-langserver/lib/language-server-stdio.js'],
-            \ 'python': ['pyls'],
-            \ 'rust': ['rustup', 'run', 'nightly', 'rls'],
-            \ }
-
-        " Automatically start language servers.
-        let g:LanguageClient_autoStart = 1
-        let g:LanguageClient_loadSettings = 1
-        let g:LanguageClient_hasSnippetSupport = 0
-        " Use an absolute configuration path if you want system-wide settings
-        let g:LanguageClient_settingsPath = '/home/tobim/.config/nvim/settings.json'
-        set completefunc=LanguageClient#complete
-        set formatexpr=LanguageClient_textDocument_rangeFormatting()
-
-        nnoremap <silent> gh :call LanguageClient_textDocument_hover()<CR>
-        nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
-        nnoremap <silent> gr :call LanguageClient_textDocument_references()<CR>
-        nnoremap <silent> gs :call LanguageClient_textDocument_documentSymbol()<CR>
-        nnoremap <silent> gF :call LanguageClient_textDocument_formatting()<CR>
-        vnoremap <silent> gF :call LanguageClient_textDocument_formatting()<CR>
-        nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
-
-        nnoremap <silent> zk :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'L'})<cr>
-        nnoremap <silent> zl :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'D'})<cr>
-        nnoremap <silent> zh :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'U'})<cr>
-        nnoremap <silent> zj :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'R'})<cr>
-
-        " bases
-        nn <silent> zb :call LanguageClient#findLocations({'method':'$ccls/inheritance'})<cr>
-        " bases of up to 3 levels
-        nn <silent> zB :call LanguageClient#findLocations({'method':'$ccls/inheritance','levels':3})<cr>
-        " derived
-        nn <silent> zd :call LanguageClient#findLocations({'method':'$ccls/inheritance','derived':v:true})<cr>
-        " derived of up to 3 levels
-        nn <silent> zD :call LanguageClient#findLocations({'method':'$ccls/inheritance','derived':v:true,'levels':3})<cr>
-
-        " caller
-        nn <silent> zc :call LanguageClient#findLocations({'method':'$ccls/call'})<cr>
-        " callee
-        nn <silent> zC :call LanguageClient#findLocations({'method':'$ccls/call','callee':v:true})<cr>
-
-        " $ccls/member
-        " nested classes / types in a namespace
-        nn <silent> zs :call LanguageClient#findLocations({'method':'$ccls/member','kind':2})<cr>
-        " member functions / functions in a namespace
-        nn <silent> zf :call LanguageClient#findLocations({'method':'$ccls/member','kind':3})<cr>
-        " member variables / variables in a namespace
-        nn <silent> zm :call LanguageClient#findLocations({'method':'$ccls/member'})<cr>
-
-        augroup LanguageClient_config
-          au!
-          au BufEnter * let b:Plugin_LanguageClient_started = 0
-          au User LanguageClientStarted setl signcolumn=yes
-          au User LanguageClientStarted let b:Plugin_LanguageClient_started = 1
-          au User LanguageClientStopped setl signcolumn=auto
-          au User LanguageClientStopped let b:Plugin_LanguageClient_stopped = 0
-          au CursorMoved * if b:Plugin_LanguageClient_started | sil call LanguageClient#textDocument_documentHighlight() | endif
-        augroup END
-        " }}}
-
-        " 'w0rp/ale' "{{{
-        " }}}
-
-        " 'arakashic/chromatica.nvim' "{{{
-        "let g:chromatica#enable_at_startup=1
-        " }}}
-
-        " 'parsonsmatt/intero-neovim' "{{{
-        " Process management:
-        "nnoremap <Leader>hio :InteroOpen<CR>
-        "nnoremap <Leader>hik :InteroKill<CR>
-        "nnoremap <Leader>hic :InteroHide<CR>
-        "nnoremap <Leader>hil :InteroLoadCurrentModule<CR>
-        "
-        "" REPL commands
-        "nnoremap <Leader>hie :InteroEval<CR>
-        "nnoremap <Leader>hit :InteroGenericType<CR>
-        "nnoremap <Leader>hiT :InteroType<CR>
-        "nnoremap <Leader>hii :InteroInfo<CR>
-        "nnoremap <Leader>hiI :InteroTypeInsert<CR>
-        "
-        "" Go to definition:
-        "nnoremap <Leader>hid :InteroGoToDef<CR>
-        "
-        "" Highlight uses of identifier:
-        "nnoremap <Leader>hiu :InteroUses<CR>
-        "
-        "" Reload the file in Intero after saving
-        "autocmd! BufWritePost *.hs InteroReload
-        "autocmd! BufWritePost package.yaml silent !hpack --silent
-        " }}}
-
-        " 'eagletmt/neco-ghc') "{{{
-        " Disable haskell-vim omnifunc
-        let g:haskellmode_completion_ghc = 0
-        autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
-        " }}}
-
-        " }}}
-      '';
-    };
-
-  };
+  programs.neovim = import ./neovim.nix {inherit pkgs;};
 
   programs.mpv = {
     enable = true;
