@@ -1,193 +1,56 @@
 { pkgs }:
 let
-  customPlugins = {
-    distilled-vim = pkgs.vimUtils.buildVimPlugin {
-      name = "distilled-vim";
-      src = pkgs.fetchFromGitHub {
-        owner = "KKPMW";
-        repo = "distilled-vim";
-        rev = "9230a9b38547d70dbf7151ed87d6bf3b5102698b";
-        sha256 = "1sql18hj9lsfvcr7ja7jgagna4mcn9108wp3m97sq12c37ak2d5p";
-      };
-    };
-
-
-    git-messenger = pkgs.vimUtils.buildVimPlugin {
-      name = "git-messenger";
-      src = pkgs.fetchFromGitHub {
-        owner = "rhysd";
-        repo = "git-messenger.vim";
-        rev = "a5c9a98bf04430a072d028475c6c44392e716acf";
-        sha256 = "05yzrpdb2ris0kjj6rffn5m73j148myisj7y7hx9wpa3m12d7kal";
-      };
-    };
-
-    vim-altr = pkgs.vimUtils.buildVimPlugin {
-      name = "vim-altr";
-      src = pkgs.fetchFromGitHub {
-        owner = "kana";
-        repo = "vim-altr";
-        rev = "d5a9d857f3fdc0099ce6fac1add405a783952fa1";
-        sha256 = "1svr6b3wjmn4davwzxywpbyhdj601c556wmvyxqza4604ip6z4q7";
-      };
-    };
-
-    vim-clang-format = pkgs.vimUtils.buildVimPlugin {
-      name = "vim-clang-format";
-      src = pkgs.fetchFromGitHub {
-        owner = "rhysd";
-        repo = "vim-clang-format";
-        rev = "8ff1660a1e9f856479fffe693743521f4f3068cb";
-        sha256 = "1g9vs6cg7irmwqa1lz6i7xbq50svykhvax12vx7cpf2bxs8jfp3n";
-      };
-    };
-
-    vim-pasta = pkgs.vimUtils.buildVimPlugin {
-      name = "vim-pasta";
-      src = pkgs.fetchFromGitHub {
-        owner = "sickill";
-        repo = "vim-pasta";
-        rev = "f77cc5d68ce70a53cd02798a98da997376d62188";
-        sha256 = "1qip74zqknsajgrp8lcrpwgs1jiiy06d5pf5r123zq7g5di196dq";
-      };
-    };
-
-    vim-visual-star-search = pkgs.vimUtils.buildVimPlugin {
-      name = "vim-visual-star-search";
-      src = pkgs.fetchFromGitHub {
-        owner = "bronson";
-        repo = "vim-visual-star-search";
-        rev = "fa55818903301d61cef67341d3524a63a14bc033";
-        sha256 = "1ny6sdl08mbh5j3fvsznlgxdv2hip190dmsgs22gygn8wpj2xc8l";
-      };
-    };
-
-    vim-textobj-variable-segment = pkgs.vimUtils.buildVimPlugin {
-      name = "vim-textobj-variable-segment";
-      src = pkgs.fetchFromGitHub {
-        owner = "Julian";
-        repo = "vim-textobj-variable-segment";
-        rev = "6c60e9b831961f9ed6bc4ff229792745747de3e8";
-        sha256 = "0q9n781nv3pk1hvc02034gpyd395n7qzhk8cka2ydd5z31zg2dgf";
-      };
-    };
-
-    vimagit = pkgs.vimUtils.buildVimPlugin {
-      name = "vimagit";
-      src = pkgs.fetchFromGitHub {
-        owner = "jreybert";
-        repo = "vimagit";
-        rev = "94762b1356ebdcb8ec486a86f45e69ef77a69465";
-        sha256 = "1p8izqdkx8g1aqmq9a2qm506bs4mvc4xdbzkh2k5xprm5vc14z0s";
-      };
-    };
-
-    vista = pkgs.vimUtils.buildVimPlugin {
-      name = "vista.vim";
-      src = pkgs.fetchFromGitHub {
-        owner = "liuchengxu";
-        repo = "vista.vim";
-        rev = "d0a43cd39ff9ccb06d09adbe43b5df5d22f58252";
-        sha256 = "18r1nirz3qpaw94x22kam72bl9iyvi6rq1iw3wqkg5apz8qc5jbh";
-      };
-    };
-
-    flatlandia = pkgs.vimUtils.buildVimPlugin {
-      name = "flatlandia";
-      src = pkgs.fetchFromGitHub {
-        owner = "jordwalke";
-        repo = "flatlandia";
-        rev = "05069c3777c463b25b609dca8dccacf9f75e2ce3";
-        sha256 = "04mk80zaxjxh9hdy9ll12ri9pq6s0p0lz1myg7yfz8rgyd74kaqz";
-      };
-    };
+  inherit (pkgs.vimUtils.override {inherit (pkgs) vim;}) buildVimPluginFrom2Nix;
+  customPlugins = pkgs.callPackage ./generated.nix {
+    inherit buildVimPluginFrom2Nix;
   };
 
-  configure = {
-    vam.knownPlugins = pkgs.vimPlugins // customPlugins;
-    vam.pluginDictionaries = [{
-      names = [
-        "ale"
-        "deoplete-nvim"
-        "distilled-vim"
-        "editorconfig-vim"
-        "fugitive"
-        "fzfWrapper"
-        "fzf-vim"
-        "idris-vim"
-        "LanguageClient-neovim"
-        "neoterm"
-        "purescript-vim"
-        "rhubarb"
-        #"vim-addon-nix"
-        "vim-airline"
-        "vim-altr"
-        "vim-clang-format"
-        "vim-diminactive"
-        "vim-easy-align"
-        "vim-gitgutter"
-        "vim-localvimrc"
-        "vim-operator-user"
-        "vim-pandoc"
-        "vim-pandoc-after"
-        "vim-pandoc-syntax"
-        "vim-pasta"
-        "vim-textobj-user"
-        "vim-textobj-variable-segment"
-        "vim-visual-star-search"
-        "vimtex"
-        "flatlandia"
-        "gruvbox"
-      ];
-    }];
-
-    customRC = ''
-      "}}}
+  customRC = ''
+    "}}}
 
 
-      " => Plugin settings {{{
-      """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    " => Plugin settings {{{
+    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-      " deoplete.nvim "{{{
-      let g:deoplete#enable_at_startup = 1
-      " }}}
+    " deoplete.nvim "{{{
+    let g:deoplete#enable_at_startup = 1
+    " }}}
 
-      " 'mhinz/neovim-remote' "{{{
-      if has('nvim')
-        let $VISUAL = 'nvr -cc split --remote-wait'
-      endif
-      "}}}
+    " 'mhinz/neovim-remote' "{{{
+    if has('nvim')
+      let $VISUAL = 'nvr -cc split --remote-wait'
+    endif
+    "}}}
 
-      " 'mhinz/vim-signify' "{{{
-      "let g:signify_sign_overwrite=0 "}}}
+    " 'mhinz/vim-signify' "{{{
+    "let g:signify_sign_overwrite=0 "}}}
 
-      " 'neoterm "{{{
-      let g:neoterm_autoscroll = 1
-      nnoremap <F3> :vertical :T make<CR>
-      nnoremap <F4> :vertical :T make test<CR>
-      " }}}
+    " 'neoterm "{{{
+    let g:neoterm_autoscroll = 1
+    nnoremap <F3> :vertical :T make<CR>
+    nnoremap <F4> :vertical :T make test<CR>
+    " }}}
 
-      " 'sjl/gundo.vim' "{{{
-      "nnoremap <F5> :GundoToggle<CR> "}}}
+    " 'sjl/gundo.vim' "{{{
+    "nnoremap <F5> :GundoToggle<CR> "}}}
 
-      " 'junegunn/vim-easy-align' "{{{
-          " Start interactive EasyAlign in visual mode
-          "vmap <Enter> <Plug>(EasyAlign)
-          " Start interactive EasyAlign with a Vim movement
-          "nmap <Leader>a <Plug>(EasyAlign) "}}}
+    " 'junegunn/vim-easy-align' "{{{
+        " Start interactive EasyAlign in visual mode
+        "vmap <Enter> <Plug>(EasyAlign)
+        " Start interactive EasyAlign with a Vim movement
+        "nmap <Leader>a <Plug>(EasyAlign) "}}}
 
-      " 'rhysd/vim-clang-format' "{{{
-      let g:clang_format#detect_style_file = 1
-      " map to <Leader>cf in C++ code
-      autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :<C-u>ClangFormat<CR>
-      autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
-      " if you install vim-operator-user
-      autocmd FileType c,cpp,objc map <buffer><Leader>x <Plug>(operator-clang-format)
-      "}}}
+    " 'rhysd/vim-clang-format' "{{{
+    let g:clang_format#detect_style_file = 1
+    " map to <Leader>cf in C++ code
+    autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :<C-u>ClangFormat<CR>
+    autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
+    " if you install vim-operator-user
+    autocmd FileType c,cpp,objc map <buffer><Leader>x <Plug>(operator-clang-format)
+    "}}}
 
-      " }}}
-    '';
-  };
+    " }}}
+  '';
 
   makeVim = { extraConfig ? "", plugins ? [ ] }:
     let
@@ -209,8 +72,18 @@ let
 
 in makeVim {
   plugins = with pkgs.vimPlugins; [
-    { package = editorconfig-vim; }
+    { package = editorconfig-vim;
+      config = ''
+        let g:EditorConfig_max_line_indicator = "none"
+      '';}
+    { package = vim-polyglot; }
+    { package = customPlugins.distilled-vim; }
     { package = customPlugins.flatlandia; }
+    { package = customPlugins.iceberg-vim; }
+    { package = customPlugins.nova-vim; }
+    { package = customPlugins.nord-vim; }
+    { package = customPlugins.vim-substrata; }
+    { package = customPlugins.vim-clap; }
     { package = fzfWrapper; }
     {
       package = fzf-vim;
@@ -348,13 +221,19 @@ in makeVim {
         autocmd BufEnter * call ncm2#enable_for_buffer()
         " IMPORTANT: :help Ncm2PopupOpen for more information
         set completeopt=noinsert,menuone,noselect
+
+        autocmd BufReadPost * call ncm2#override_source('LanguageClient_cpp', {'filter': {
+            \ 'name':'substitute',
+            \ 'pattern': '^([a-zA-Z0-9_]+\(?).*',
+            \ 'replace': '\1',
+            \ 'key': 'word'}})
       '';
     }
     { package = ncm2-bufword; }
     { package = float-preview-nvim; }
     { package = customPlugins.vimagit; }
     {
-      package = customPlugins.vista;
+      package = customPlugins.vista-vim;
       config = ''
         " How each level is indented and what to prepend.
         " This could make the display more compact or more spacious.
@@ -374,9 +253,16 @@ in makeVim {
         " Ensure you have installed some decent font to show these pretty
         " symbols, then you can enable icon for the kind.
         let g:vista#renderer#enable_icon = 1
+
+        autocmd BufEnter * call UpdateSideBarWidth()
+        autocmd VimResized * call UpdateSideBarWidth()
+        function! UpdateSideBarWidth()
+          let width = min([&columns - 80 - 3, 50])
+          let g:vista_sidebar_width = width
+        endfunction
       '';
     }
-    { package = customPlugins.git-messenger; }
+    { package = customPlugins.git-messenger-vim; }
     { package = customPlugins.vim-textobj-variable-segment; }
   ];
 
@@ -400,26 +286,26 @@ in makeVim {
 
     "set background=dark
     set termguicolors
-    colorscheme flatlandia
+    colorscheme substrata
 
     set ruler
     set cmdheight=2
     set signcolumn=yes
     set cursorline
 
-    hi ActiveWindow guibg=#17252c
-    hi InactiveWindow guibg=#0D1B22
+    "hi ActiveWindow guibg=#17252c
+    "hi InactiveWindow guibg=#0D1B22
 
-    " Call method on window enter
-    augroup WindowManagement
-      autocmd!
-      autocmd WinEnter * call Handle_Win_Enter()
-    augroup END
+    "" Call method on window enter
+    "augroup WindowManagement
+    "  autocmd!
+    "  autocmd WinEnter * call Handle_Win_Enter()
+    "augroup END
 
-    " Change highlight group of active/inactive windows
-    function! Handle_Win_Enter()
-      setlocal winhighlight=Normal:ActiveWindow,NormalNC:InactiveWindow
-    endfunction
+    "" Change highlight group of active/inactive windows
+    "function! Handle_Win_Enter()
+    "  setlocal winhighlight=Normal:ActiveWindow,NormalNC:InactiveWindow
+    "endfunction
 
     " Set 7 lines to the cursor - when moving vertically using j/k
     set so=7

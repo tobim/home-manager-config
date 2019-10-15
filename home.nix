@@ -315,7 +315,7 @@ in
     ];
   };
 
-  programs.neovim = import ./neovim.nix {inherit pkgs;};
+  programs.neovim = import ./neovim {inherit pkgs;};
 
   programs.mpv = {
     enable = true;
