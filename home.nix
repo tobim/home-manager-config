@@ -30,6 +30,7 @@ let
       dejavu_fonts
       font-awesome
       hack-font
+      ia-writer-duospace
       nerdfonts
       proggyfonts
       roboto-mono
