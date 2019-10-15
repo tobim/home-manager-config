@@ -192,7 +192,7 @@ in
   services.syncthing.enable = on_linux;
 
   programs.firefox = {
-    enable = true;
+    enable = !on_darwin;
     package = pkgs.firefox-wayland;
   };
   programs.browserpass.enable = true;
