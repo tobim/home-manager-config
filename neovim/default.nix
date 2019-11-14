@@ -76,7 +76,9 @@ in makeVim {
       config = ''
         let g:EditorConfig_max_line_indicator = "none"
       '';}
+    { package = vim-asterisk; }
     { package = vim-polyglot; }
+    { package = customPlugins.clever-f-vim; }
     { package = customPlugins.distilled-vim; }
     { package = customPlugins.flatlandia; }
     { package = customPlugins.iceberg-vim; }
@@ -109,7 +111,7 @@ in makeVim {
           let height = min([&lines - 3, 30])
           let width = float2nr(&columns - (&columns * 2 / 10))
           let col = float2nr((&columns - width) / 2)
-          let row = &lines - height - 3
+          let row = &lines - height - 5
 
           let opts = {
                 \ 'relative': 'editor',
@@ -264,6 +266,7 @@ in makeVim {
     }
     { package = customPlugins.git-messenger-vim; }
     { package = customPlugins.vim-textobj-variable-segment; }
+    { package = undotree; }
   ];
 
   extraConfig = ''

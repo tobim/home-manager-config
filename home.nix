@@ -48,6 +48,7 @@ let
       pkgs.meld
       pkgs.numix-cursor-theme
       pkgs.numix-icon-theme
+      pkgs.pinentry_gnome
       pkgs.qutebrowser
       pkgs.waybar
       pkgs.wl-clipboard
@@ -91,7 +92,6 @@ let
       pkgs.gitAndTools.hub
       pkgs.git-revise
       pkgs.gnumake
-      pkgs.pinentry_ncurses
       pkgs.htop
       pkgs.imagemagick
       pkgs.isync
@@ -109,9 +109,12 @@ let
       pkgs.ripgrep
       pkgs.syncthing
       pkgs.taskwarrior
+      pkgs.tdesktop
       pkgs.tectonic
       pkgs.tmux
       pkgs.tree
+      pkgs.weechat
+      pkgs.wire-desktop
     ];
 
     python_packages = [
@@ -184,6 +187,7 @@ in
     enableExtraSocket = true;
     extraConfig = ''
       extra-socket /home/tobim/.gnupg/S.gpg-agent.extra
+      pinentry-program ${pkgs.pinentry_gnome}/bin/pinentry-gnome3
     '';
   };
 
@@ -193,7 +197,7 @@ in
 
   programs.firefox = {
     enable = !on_darwin;
-    package = pkgs.firefox-wayland;
+    #package = pkgs.firefox-wayland;
   };
   programs.browserpass.enable = true;
 

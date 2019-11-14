@@ -4,6 +4,17 @@
 let
   packages = ( self:
 {
+  clever-f-vim = buildVimPluginFrom2Nix {
+    pname = "clever-f-vim";
+    version = "2019-08-09";
+    src = fetchFromGitHub {
+      owner = "rhysd";
+      repo = "clever-f.vim";
+      rev = "baceb2c9d1fa0850bbf839cd2c8c0a9bbe524ff5";
+      sha256 = "17i8p9sd7cxwdg8wi324dzqllkjrwm8fp9927gnh0vgcjw0rs47k";
+    };
+  };
+
   distilled-vim = buildVimPluginFrom2Nix {
     pname = "distilled-vim";
     version = "2019-08-02";
@@ -94,12 +105,12 @@ let
 
   vim-clap = buildVimPluginFrom2Nix {
     pname = "vim-clap";
-    version = "2019-10-15";
+    version = "2019-10-31";
     src = fetchFromGitHub {
       owner = "liuchengxu";
       repo = "vim-clap";
-      rev = "ff2ec57cc8e7342b4f7f28bdc6e2f3f31b11b4e3";
-      sha256 = "0mzpxpbj1vrcsfgql2fck0jcpm1b9gls90kqms0gi4w68w45rps0";
+      rev = "bee98419ccdc53222a14191e6731f89d827d7d77";
+      sha256 = "0bzwyypnrrw1vdx0vlw5z4kb45jidzqs0ggybsws1498ch2g5h7s";
     };
   };
 
@@ -116,12 +127,12 @@ let
 
   vim-substrata = buildVimPluginFrom2Nix {
     pname = "vim-substrata";
-    version = "2019-10-10";
+    version = "2019-10-30";
     src = fetchFromGitHub {
       owner = "arzg";
       repo = "vim-substrata";
-      rev = "dc7e663cd77cafa2562c4f6b06885b499e49090d";
-      sha256 = "0k0q4h8rwmy1dickqh467a4vhsgf7cassyf0kamh8h45p5zbpayx";
+      rev = "9a6406e2aa6a4b74146935df139993db9f8416d4";
+      sha256 = "0p7py0h6d05604xs94jm5icra8hm98bqgamhn1z6ai1h1rcm2axi";
     };
   };
 
@@ -160,12 +171,12 @@ let
 
   vista-vim = buildVimPluginFrom2Nix {
     pname = "vista-vim";
-    version = "2019-10-14";
+    version = "2019-10-30";
     src = fetchFromGitHub {
       owner = "liuchengxu";
       repo = "vista.vim";
-      rev = "7d93ee08f76002ca80f25a1fb1317ecd47d82ffb";
-      sha256 = "0ml5h9scc96wzf6czxc4k57x07amiyn3ajiwmff37ggpm20sxchm";
+      rev = "3811d1e7d06929681022000324cde9c3bcc2c706";
+      sha256 = "09xqi7lgkj1qyfzwax9vl0silcbr4mhc6g9cixcgfd6y27jpj21x";
     };
   };
 
