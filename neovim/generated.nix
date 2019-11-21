@@ -50,12 +50,12 @@ let
 
   iceberg-vim = buildVimPluginFrom2Nix {
     pname = "iceberg-vim";
-    version = "2019-08-31";
+    version = "2019-11-07";
     src = fetchFromGitHub {
       owner = "cocopon";
       repo = "iceberg.vim";
-      rev = "ddc3e4ea485771e4f0b939fd8259f3152eb1bd29";
-      sha256 = "0128yxhafndllc383ncw4ka0r7q8mwvb3nx70f4plb6m3f07x8rm";
+      rev = "dc4b4b5838d126c22c44229a3ee170f6ac79ba86";
+      sha256 = "1hicambipbgwf22fax782gpfmcndcpikj3bpf8v91wd5fxm7ik74";
     };
   };
 
@@ -105,12 +105,12 @@ let
 
   vim-clap = buildVimPluginFrom2Nix {
     pname = "vim-clap";
-    version = "2019-10-31";
+    version = "2019-11-21";
     src = fetchFromGitHub {
       owner = "liuchengxu";
       repo = "vim-clap";
-      rev = "bee98419ccdc53222a14191e6731f89d827d7d77";
-      sha256 = "0bzwyypnrrw1vdx0vlw5z4kb45jidzqs0ggybsws1498ch2g5h7s";
+      rev = "849747572e492da00d02b63a8e04db243c1a8547";
+      sha256 = "0cysjwqzv2b3pvbmql1h7jhlbgnkjjdxy43kvd16ps8nlyll0r41";
     };
   };
 
@@ -171,12 +171,12 @@ let
 
   vista-vim = buildVimPluginFrom2Nix {
     pname = "vista-vim";
-    version = "2019-10-30";
+    version = "2019-11-20";
     src = fetchFromGitHub {
       owner = "liuchengxu";
       repo = "vista.vim";
-      rev = "3811d1e7d06929681022000324cde9c3bcc2c706";
-      sha256 = "09xqi7lgkj1qyfzwax9vl0silcbr4mhc6g9cixcgfd6y27jpj21x";
+      rev = "44ad0dab12a92c0ee530941f1349d3814a551696";
+      sha256 = "1arnks7hh2n8dwhybv048hs45jlmxqjxs03qgyp7za4dmkkw6lag";
     };
   };
 
