@@ -6,12 +6,12 @@ let
 {
   clever-f-vim = buildVimPluginFrom2Nix {
     pname = "clever-f-vim";
-    version = "2019-08-09";
+    version = "2020-01-25";
     src = fetchFromGitHub {
       owner = "rhysd";
       repo = "clever-f.vim";
-      rev = "baceb2c9d1fa0850bbf839cd2c8c0a9bbe524ff5";
-      sha256 = "17i8p9sd7cxwdg8wi324dzqllkjrwm8fp9927gnh0vgcjw0rs47k";
+      rev = "e2085bbeaf69ffadd7f9bd390c36633fa70c01f4";
+      sha256 = "0r8raad7yy1qsi9ajajsbiq1ayppkp1bjji5dsj8sdwycmbyvgfw";
     };
   };
 
@@ -39,12 +39,12 @@ let
 
   git-messenger-vim = buildVimPluginFrom2Nix {
     pname = "git-messenger-vim";
-    version = "2019-10-13";
+    version = "2020-01-27";
     src = fetchFromGitHub {
       owner = "rhysd";
       repo = "git-messenger.vim";
-      rev = "c7d836d058613c3d4e797925d223b03c53553b63";
-      sha256 = "0liv2wahz4fjjlz2ysvk3i9mb1q2asd7acsgcmicysl7fqd9x4i4";
+      rev = "422a9334b9fe1dec9ecea6c0a1c48da71340e45f";
+      sha256 = "18ws17c0fx2jsfwkfc5mln5853sssflg1l0xwwy8j9ldryy3x1z8";
     };
   };
 
@@ -61,12 +61,12 @@ let
 
   nord-vim = buildVimPluginFrom2Nix {
     pname = "nord-vim";
-    version = "2019-05-25";
+    version = "2019-12-17";
     src = fetchFromGitHub {
       owner = "arcticicestudio";
       repo = "nord-vim";
-      rev = "9f7ce848723f69e33792e5606091bbfd5739d253";
-      sha256 = "1n6kdnll5jh92kfbwwm8544mpp7c2awqsaps91agqjd3nwa5x27x";
+      rev = "f06189a4c054fe8c22e46aca4d451e03456f2283";
+      sha256 = "0gk4zq0gz3nnwfkldswg9bjpk0gf6d6mgfzcgvj0pnlbja6ass81";
     };
   };
 
@@ -105,12 +105,12 @@ let
 
   vim-clap = buildVimPluginFrom2Nix {
     pname = "vim-clap";
-    version = "2019-11-21";
+    version = "2020-02-03";
     src = fetchFromGitHub {
       owner = "liuchengxu";
       repo = "vim-clap";
-      rev = "849747572e492da00d02b63a8e04db243c1a8547";
-      sha256 = "0cysjwqzv2b3pvbmql1h7jhlbgnkjjdxy43kvd16ps8nlyll0r41";
+      rev = "929cff01be4b6554b890db24802d645571926121";
+      sha256 = "1nwmw9fkqn37zrsbqjbjsir475svj89iyg53d7pchdj2i2dic3lz";
     };
   };
 
@@ -127,23 +127,23 @@ let
 
   vim-substrata = buildVimPluginFrom2Nix {
     pname = "vim-substrata";
-    version = "2019-10-30";
+    version = "2020-01-07";
     src = fetchFromGitHub {
       owner = "arzg";
       repo = "vim-substrata";
-      rev = "9a6406e2aa6a4b74146935df139993db9f8416d4";
-      sha256 = "0p7py0h6d05604xs94jm5icra8hm98bqgamhn1z6ai1h1rcm2axi";
+      rev = "4ef623320fb28bf5ece6da04d86e4de5759ec472";
+      sha256 = "0gz773546283izlc1pxvqj3ydj7aa2aqhpfq9mvy3dxfad26cwrz";
     };
   };
 
   vim-textobj-variable-segment = buildVimPluginFrom2Nix {
     pname = "vim-textobj-variable-segment";
-    version = "2019-05-05";
+    version = "2019-12-30";
     src = fetchFromGitHub {
       owner = "Julian";
       repo = "vim-textobj-variable-segment";
-      rev = "1af9cdef58a4072dddbe926e7c8c53903e97b70a";
-      sha256 = "0spfbc30sli7ckpfbmjspfrbcg9dq5k0aimzbxx06rimbba8f846";
+      rev = "78457d4322b44bf89730e708b62b69df48c39aa3";
+      sha256 = "14dcrnk83hj4ixrkdgjrk9cf0193f82wqckdzd4w0b76adf3habj";
     };
   };
 
@@ -160,23 +160,23 @@ let
 
   vimagit = buildVimPluginFrom2Nix {
     pname = "vimagit";
-    version = "2019-07-24";
+    version = "2020-01-12";
     src = fetchFromGitHub {
       owner = "jreybert";
       repo = "vimagit";
-      rev = "94762b1356ebdcb8ec486a86f45e69ef77a69465";
-      sha256 = "1p8izqdkx8g1aqmq9a2qm506bs4mvc4xdbzkh2k5xprm5vc14z0s";
+      rev = "bf7b16e99e075b019e56f2fbfb96c493ca3635e2";
+      sha256 = "1f7gvlhrvvkf69y5vfrkvidhx8aa03n1aqmdhk9qjd6sglfg5w0i";
     };
   };
 
   vista-vim = buildVimPluginFrom2Nix {
     pname = "vista-vim";
-    version = "2019-11-20";
+    version = "2020-01-30";
     src = fetchFromGitHub {
       owner = "liuchengxu";
       repo = "vista.vim";
-      rev = "44ad0dab12a92c0ee530941f1349d3814a551696";
-      sha256 = "1arnks7hh2n8dwhybv048hs45jlmxqjxs03qgyp7za4dmkkw6lag";
+      rev = "dd5769ec7a1e4c2c8927a6af4d26f88524faa60c";
+      sha256 = "0jad10lx3lvfy56gnk50lpcbwyxk16yxm5i1p3r3zwsqra03kw5h";
     };
   };
 

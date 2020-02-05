@@ -43,8 +43,8 @@ let
       pkgs.chromium
       pkgs.dtrx
       pkgs.gnome3.glib-networking
+      pkgs.gnome3.gnome-tweak-tool
       pkgs.gparted
-      pkgs.kbfs
       pkgs.meld
       pkgs.numix-cursor-theme
       pkgs.numix-icon-theme
@@ -68,16 +68,17 @@ let
       pkgs.ncmpcpp
       pkgs.signal-desktop
       pkgs.youtube-dl
-      #pkgs.zoom-us
+      pkgs.zoom-us
     ];
 
     default_packages = [
       pkgs.alacritty
       pkgs.any-nix-shell
+      pkgs.bandwhich
       pkgs.ccls
       pkgs.cmake
-      clang-tools-wrapper.clang_8
-      #pkgs.clang-tools
+      #clang-tools-wrapper.clang_9
+      pkgs.clang-tools
       pkgs.cloc
       pkgs.coreutils
       pkgs.direnv
@@ -95,8 +96,9 @@ let
       pkgs.htop
       pkgs.imagemagick
       pkgs.isync
+      pkgs.joplin
+      pkgs.joplin-desktop
       pkgs.jq
-      pkgs.keybase
       pkgs.lnav
       pkgs.nixfmt
       pkgs.nixpkgs-fmt
@@ -109,7 +111,7 @@ let
       pkgs.ripgrep
       pkgs.syncthing
       pkgs.taskwarrior
-      pkgs.tdesktop
+      #pkgs.tdesktop
       pkgs.tectonic
       pkgs.tmux
       pkgs.tree
@@ -148,7 +150,7 @@ in
       GS_OPTIONS = "-sPAPERSIZE=a4";
       # Prevent clobbering SSH_AUTH_SOCK
       GSM_SKIP_SSH_AGENT_WORKAROUND = "1";
-
+      GITHUB_TOKEN = "$(pass github_token)";
     } // lib.optionalAttrs on_darwin {
       SSH_AUTH_SOCK = "\${SSH_AUTH_SOCK:-$(gpgconf --list-dirs agent-ssh-socket)}";
     };
@@ -190,6 +192,9 @@ in
       pinentry-program ${pkgs.pinentry_gnome}/bin/pinentry-gnome3
     '';
   };
+
+  services.kbfs.enable = true;
+  services.keybase.enable = true;
 
   fonts.fontconfig.enable = true;
 
@@ -275,12 +280,20 @@ in
 
   programs.zsh = {
     enable = true;
+      initExtra = ''
+        source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+        source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/config/p10k-lean.zsh
+      '';
   };
 
   programs.git = {
     enable = true;
     userName = "Tobias Mayer";
     userEmail = "tobim@fastmail.fm";
+    signing = {
+      key = "F8657E90819A1298";
+      signByDefault = true;
+    };
     aliases = {
       st = "status --short --branch ";
       ci = "commit ";
@@ -315,6 +328,7 @@ in
         fschkobjects = true
     '';
     ignores = [
+      ".clangd/"
       ".direnv/"
     ];
   };
@@ -395,87 +409,89 @@ in
   color21 #ebdbb2
   '';
 
+  services.lorri.enable = true;
+
   programs.direnv = {
     enable = true;
-    stdlib = ''
-      # Usage: use_nix [...]
-      #
-      # Load environment variables from `nix-shell`.
-      # If you have a `default.nix` or `shell.nix` one of these will be used and
-      # the derived environment will be stored at ./.direnv/env-<hash>
-      # and symlink to it will be created at ./.direnv/default.
-      # Dependencies are added to the GC roots, such that the environment remains persistent.
-      #
-      # Packages can also be specified directly via e.g `use nix -p ocaml`,
-      # however those will not be added to the GC roots.
-      #
-      # The resulting environment is cached for better performance.
-      #
-      # To trigger switch to a different environment:
-      # `rm -f .direnv/default`
-      #
-      # To derive a new environment:
-      # `rm -rf .direnv/env-$(md5sum {shell,default}.nix 2> /dev/null | cut -c -32)`
-      #
-      # To remove cache:
-      # `rm -f .direnv/dump-*`
-      #
-      # To remove all environments:
-      # `rm -rf .direnv/env-*`
-      #
-      # To remove only old environments: 
-      # `find .direnv -name 'env-*' -and -not -name `readlink .direnv/default` -exec rm -rf {} +`
-      #
-      use_nix() {
-          set -e
-
-          local shell="shell.nix"
-          if [[ ! -f "''${shell}" ]]; then
-              shell="default.nix"
-          fi
-
-          if [[ ! -f "''${shell}" ]]; then
-              fail "use nix: shell.nix or default.nix not found in the folder"
-          fi
-
-          local dir="''${PWD}"/.direnv
-          local default="''${dir}/default"
-          if [[ ! -L "''${default}" ]] || [[ ! -d `readlink "''${default}"` ]]; then
-              local wd="''${dir}/env-`md5sum "''${shell}" | cut -c -32`" # TODO: Hash also the nixpkgs version?
-              mkdir -p "''${wd}"
-
-              local drv="''${wd}/env.drv"
-              if [[ ! -f "''${drv}" ]]; then
-                  log_status "use nix: deriving new environment"
-                  IN_NIX_SHELL=1 nix-instantiate --add-root "''${drv}" --indirect "''${shell}" > /dev/null
-                  nix-store -r `nix-store --query --references "''${drv}"` --add-root "''${wd}/dep" --indirect > /dev/null
-              fi
-
-              rm -f "''${default}"
-              ln -s `basename "''${wd}"` "''${default}"
-          fi
-
-          local drv=`readlink -f "''${default}/env.drv"`
-          local dump="''${dir}/dump-`md5sum ".envrc" | cut -c -32`-`md5sum ''${drv} | cut -c -32`"
-
-          if [[ ! -f "''${dump}" ]] || [[ "''${XDG_CONFIG_DIR}/direnv/direnvrc" -nt "''${dump}" ]]; then
-              log_status "use nix: updating cache"
-
-              old=`find "''${dir}" -name 'dump-*'`
-              nix-shell "''${drv}" --show-trace "$@" --run 'direnv dump' > "''${dump}"
-              rm -f ''${old}
-          fi
-
-          direnv_load cat "''${dump}"
-
-          watch_file "''${default}"
-          watch_file shell.nix
-          if [[ ''${shell} == "default.nix" ]]; then
-              watch_file default.nix
-          fi
-      }
-    '';
     enableFishIntegration = true;
+    #stdlib = ''
+    #  # Usage: use_nix [...]
+    #  #
+    #  # Load environment variables from `nix-shell`.
+    #  # If you have a `default.nix` or `shell.nix` one of these will be used and
+    #  # the derived environment will be stored at ./.direnv/env-<hash>
+    #  # and symlink to it will be created at ./.direnv/default.
+    #  # Dependencies are added to the GC roots, such that the environment remains persistent.
+    #  #
+    #  # Packages can also be specified directly via e.g `use nix -p ocaml`,
+    #  # however those will not be added to the GC roots.
+    #  #
+    #  # The resulting environment is cached for better performance.
+    #  #
+    #  # To trigger switch to a different environment:
+    #  # `rm -f .direnv/default`
+    #  #
+    #  # To derive a new environment:
+    #  # `rm -rf .direnv/env-$(md5sum {shell,default}.nix 2> /dev/null | cut -c -32)`
+    #  #
+    #  # To remove cache:
+    #  # `rm -f .direnv/dump-*`
+    #  #
+    #  # To remove all environments:
+    #  # `rm -rf .direnv/env-*`
+    #  #
+    #  # To remove only old environments: 
+    #  # `find .direnv -name 'env-*' -and -not -name `readlink .direnv/default` -exec rm -rf {} +`
+    #  #
+    #  use_nix() {
+    #      set -e
+
+    #      local shell="shell.nix"
+    #      if [[ ! -f "''${shell}" ]]; then
+    #          shell="default.nix"
+    #      fi
+
+    #      if [[ ! -f "''${shell}" ]]; then
+    #          fail "use nix: shell.nix or default.nix not found in the folder"
+    #      fi
+
+    #      local dir="''${PWD}"/.direnv
+    #      local default="''${dir}/default"
+    #      if [[ ! -L "''${default}" ]] || [[ ! -d `readlink "''${default}"` ]]; then
+    #          local wd="''${dir}/env-`md5sum "''${shell}" | cut -c -32`" # TODO: Hash also the nixpkgs version?
+    #          mkdir -p "''${wd}"
+
+    #          local drv="''${wd}/env.drv"
+    #          if [[ ! -f "''${drv}" ]]; then
+    #              log_status "use nix: deriving new environment"
+    #              IN_NIX_SHELL=1 nix-instantiate --add-root "''${drv}" --indirect "''${shell}" > /dev/null
+    #              nix-store -r `nix-store --query --references "''${drv}"` --add-root "''${wd}/dep" --indirect > /dev/null
+    #          fi
+
+    #          rm -f "''${default}"
+    #          ln -s `basename "''${wd}"` "''${default}"
+    #      fi
+
+    #      local drv=`readlink -f "''${default}/env.drv"`
+    #      local dump="''${dir}/dump-`md5sum ".envrc" | cut -c -32`-`md5sum ''${drv} | cut -c -32`"
+
+    #      if [[ ! -f "''${dump}" ]] || [[ "''${XDG_CONFIG_DIR}/direnv/direnvrc" -nt "''${dump}" ]]; then
+    #          log_status "use nix: updating cache"
+
+    #          old=`find "''${dir}" -name 'dump-*'`
+    #          nix-shell "''${drv}" --show-trace "$@" --run 'direnv dump' > "''${dump}"
+    #          rm -f ''${old}
+    #      fi
+
+    #      direnv_load cat "''${dump}"
+
+    #      watch_file "''${default}"
+    #      watch_file shell.nix
+    #      if [[ ''${shell} == "default.nix" ]]; then
+    #          watch_file default.nix
+    #      fi
+    #  }
+    #'';
   };
 
   home.file.".gdbinit".text = ''

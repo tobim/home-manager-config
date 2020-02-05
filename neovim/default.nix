@@ -5,10 +5,7 @@ let
     inherit buildVimPluginFrom2Nix;
   };
 
-  customRC = ''
-    "}}}
-
-
+  currently_unused = ''
     " => Plugin settings {{{
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -40,15 +37,6 @@ let
         " Start interactive EasyAlign with a Vim movement
         "nmap <Leader>a <Plug>(EasyAlign) "}}}
 
-    " 'rhysd/vim-clang-format' "{{{
-    let g:clang_format#detect_style_file = 1
-    " map to <Leader>cf in C++ code
-    autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :<C-u>ClangFormat<CR>
-    autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
-    " if you install vim-operator-user
-    autocmd FileType c,cpp,objc map <buffer><Leader>x <Plug>(operator-clang-format)
-    "}}}
-
     " }}}
   '';
 
@@ -76,7 +64,10 @@ in makeVim {
       config = ''
         let g:EditorConfig_max_line_indicator = "none"
       '';}
-    { package = vim-asterisk; }
+    {
+      package = vim-asterisk;
+      disabled = true;
+    }
     { package = vim-polyglot; }
     { package = customPlugins.clever-f-vim; }
     { package = customPlugins.distilled-vim; }
@@ -86,6 +77,7 @@ in makeVim {
     { package = customPlugins.nord-vim; }
     { package = customPlugins.vim-substrata; }
     { package = customPlugins.vim-clap; }
+    { package = customPlugins.vim-visual-star-search; }
     { package = fzfWrapper; }
     {
       package = fzf-vim;
@@ -130,8 +122,8 @@ in makeVim {
       package = LanguageClient-neovim;
       config = ''
         let g:LanguageClient_serverCommands = {
-            \ 'c': ['ccls', '--log-file=/tmp/ccls.log'],
-            \ 'cpp': ['ccls', '--log-file=/tmp/ccls.log'],
+            \ 'c': ['clangd', '-background-index'],
+            \ 'cpp': ['clangd', '-background-index'],
             \ 'haskell': ['hie', '--lsp'],
             \ 'javascript': ['/opt/javascript-typescript-langserver/lib/language-server-stdio.js'],
             \ 'python': ['pyls'],
@@ -323,6 +315,7 @@ in makeVim {
 
     set formatoptions+=r
     set formatoptions-=o
+    " set formatoptions-=t
 
     " let backspace traverse line breaks and delete indentations
     " in indentation step size (tabstop)
