@@ -1,29 +1,30 @@
 { pkgs, lib, config, ... }:
 
 let
-    clangPredicate = n: _: with pkgs.lib; with builtins;
-      hasPrefix "clang_" n && !(hasPrefix "clang_3" n);
-    clangs = pkgs.lib.filterAttrs clangPredicate pkgs
-      // { inherit (pkgs) clang; };
-
-    clang-tools-wrapper = let
-      wrapCC = cc: pkgs.callPackage ./clang-tools-wrapper.nix {
-        inherit cc;
-      };
-    in pkgs.lib.mapAttrs (_: v: wrapCC v) clangs // {
-      inherit wrapCC;
-      recurseForDerivations = true;
-    };
-
     on_darwin = builtins.currentSystem == "x86_64-darwin";
     on_linux = builtins.currentSystem == "x86_64-linux";
-    gst_packages = with pkgs; [
+    gst_packages = with pkgs.gst_all_1; [
       gstreamer
       gst-plugins-good
       gst-plugins-bad
       gst-plugins-ugly
       #gst-ffmpeg
     ];
+
+    notesDir = "/home/tobim/zettelkasten";
+    neuron = (
+      let neuronRev = "687dcf0bec94c238361db64b08b4fac62bee89dd";
+          neuronSrc = builtins.fetchTarball "https://github.com/srid/neuron/archive/${neuronRev}.tar.gz";
+       in import neuronSrc {});
+
+    weechat-notify = pkgs.weechat.override {
+      configure = { availablePlugins, ... }: {
+        scripts = with pkgs.weechatScripts; [
+          weechat-notify-send wee-slack
+        ];
+      };
+    };
+    weechat = pkgs.weechat;
 
     fonts = with pkgs; [
       anonymousPro
@@ -35,7 +36,7 @@ let
       proggyfonts
       roboto-mono
       source-code-pro
-      unscii
+      #unscii
     ];
 
     linux_packages = [
@@ -50,7 +51,7 @@ let
       pkgs.numix-icon-theme
       pkgs.pinentry_gnome
       pkgs.qutebrowser
-      pkgs.waybar
+      #pkgs.waybar
       pkgs.wl-clipboard
       pkgs.xournal
       #haskellPackages.buchhaltung
@@ -63,23 +64,30 @@ let
     ];
 
     home_packages = with pkgs; [
+      neuron
       pkgs.beets
       pkgs.hledger
       pkgs.ncmpcpp
+      pkgs.pavucontrol
+      pkgs.playerctl
       pkgs.signal-desktop
+      pkgs.slack
+      pkgs.wmc-mpris
       pkgs.youtube-dl
       pkgs.zoom-us
     ];
 
     default_packages = [
+      pkgs._1password
       pkgs.alacritty
       pkgs.any-nix-shell
       pkgs.bandwhich
+      pkgs.bat
+      pkgs.cachix
+      pkgs.ccache
       pkgs.ccls
       pkgs.cmake
-      #clang-tools-wrapper.clang_9
       pkgs.clang-tools
-      pkgs.cloc
       pkgs.coreutils
       pkgs.direnv
       pkgs.exa
@@ -89,18 +97,17 @@ let
       pkgs.fzf
       pkgs.git
       pkgs.gitAndTools.git-gone
+      pkgs.gitAndTools.git-imerge
       pkgs.gitAndTools.git-recent
-      pkgs.gitAndTools.hub
+      pkgs.gitAndTools.git-trim
+      pkgs.gitAndTools.gh
       pkgs.git-revise
       pkgs.gnumake
       pkgs.htop
       pkgs.imagemagick
       pkgs.isync
-      pkgs.joplin
-      pkgs.joplin-desktop
       pkgs.jq
       pkgs.lnav
-      pkgs.nixfmt
       pkgs.nixpkgs-fmt
       pkgs.ncdu
       pkgs.neovim-remote
@@ -109,14 +116,15 @@ let
       pkgs.pass
       pkgs.passff-host
       pkgs.ripgrep
+      pkgs.rnix-lsp
+      pkgs.rust-analyzer
       pkgs.syncthing
       pkgs.taskwarrior
-      #pkgs.tdesktop
       pkgs.tectonic
       pkgs.tmux
+      pkgs.tokei
       pkgs.tree
-      pkgs.weechat
-      pkgs.wire-desktop
+      weechat
     ];
 
     python_packages = [
@@ -125,18 +133,27 @@ let
         flake8
         pylint
         yapf
-      ] ++
-      (if (builtins.hasAttr "python-language-server" ps) then with ps;[
+      ]
+      ++ (if (builtins.hasAttr "python-language-server" ps) then with ps;[
         python-language-server
         pyls-mypy
         pyls-isort
         rope
-      ] else [])))
+      ] else [])
+      ))
     ];
 
 
 in
 {
+  nixpkgs.overlays = [ 
+    (import (builtins.fetchTarball {
+      url = https://github.com/mjlbach/neovim-nightly-overlay/archive/master.tar.gz;
+    }))
+  ];
+
+  imports = [ ./modules/neovim-nightly.nix ];
+
   home = {
     packages = default_packages ++ python_packages ++ fonts ++
       (if on_linux then linux_packages ++ home_packages
@@ -145,12 +162,12 @@ in
 
     sessionVariables = {
       BLOCK_SIZE = "'1";
-      VISUAL = "nvim";
-      EDITOR = "nvim";
+      VISUAL = "nn";
+      EDITOR = "nn";
       GS_OPTIONS = "-sPAPERSIZE=a4";
       # Prevent clobbering SSH_AUTH_SOCK
       GSM_SKIP_SSH_AGENT_WORKAROUND = "1";
-      GITHUB_TOKEN = "$(pass github_token)";
+      CMAKE_CXX_COMPILER_LAUNCHER="ccache";
     } // lib.optionalAttrs on_darwin {
       SSH_AUTH_SOCK = "\${SSH_AUTH_SOCK:-$(gpgconf --list-dirs agent-ssh-socket)}";
     };
@@ -169,7 +186,7 @@ in
   };
 
   pam.sessionVariables = {
-    EDITOR = "nvim";
+    EDITOR = "nn";
   };
 
   # Disable gnome-keyring ssh-agent
@@ -202,7 +219,7 @@ in
 
   programs.firefox = {
     enable = !on_darwin;
-    #package = pkgs.firefox-wayland;
+    package = pkgs.firefox-wayland;
   };
   programs.browserpass.enable = true;
 
@@ -295,8 +312,8 @@ in
       signByDefault = true;
     };
     aliases = {
-      st = "status --short --branch ";
-      ci = "commit ";
+      st = "status --short --branch";
+      ci = "commit";
       bclean = ''
         "!f() { \
            force=F;\
@@ -311,10 +328,12 @@ in
            fi;\
            git branch --merged ''${1-master} | grep -v \" ''${1-master}$\" | xargs -r ''${cmd[@]}; };\
          f"'';
-      amend = "commit --amend ";
-      undo = "reset --soft HEAD^ ";
-      glog = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' ";
-      grog = "log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)' ";
+      amend = "commit --amend";
+      undo = "reset --soft HEAD^";
+      tracking = "for-each-ref --format='%(upstream:short)' $(git rev-parse --symbolic-full-name HEAD)";
+      raze = "!f() { git reset --hard $(git tracking) }; f";
+      glog = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'";
+      grog = "log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)'";
       #sub = "!f() { git grep -l $1 | xargs sed -i 's|$1|$2|g' }; f"
     };
     extraConfig=''
@@ -323,17 +342,32 @@ in
       [mergetool]
         prompt = true
       [mergetool "vimdiff"]
-        cmd = nvim -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
+        cmd = nn -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
       [transfer]
         fschkobjects = true
+      [pull]
+        ff = only
     '';
     ignores = [
+      ".ccls-cache/"
       ".clangd/"
       ".direnv/"
     ];
   };
 
+  programs.emacs = {
+    enable = true;
+    extraPackages = epkgs: [
+      epkgs.magit
+      epkgs.evil
+      epkgs.evil-magit
+      epkgs.evil-org
+      epkgs.which-key
+    ];
+  };
+
   programs.neovim = import ./neovim {inherit pkgs;};
+  programs.neovim-nightly = import ./neovim/nightly.nix {inherit pkgs;};
 
   programs.mpv = {
     enable = true;
@@ -414,84 +448,14 @@ in
   programs.direnv = {
     enable = true;
     enableFishIntegration = true;
-    #stdlib = ''
-    #  # Usage: use_nix [...]
-    #  #
-    #  # Load environment variables from `nix-shell`.
-    #  # If you have a `default.nix` or `shell.nix` one of these will be used and
-    #  # the derived environment will be stored at ./.direnv/env-<hash>
-    #  # and symlink to it will be created at ./.direnv/default.
-    #  # Dependencies are added to the GC roots, such that the environment remains persistent.
-    #  #
-    #  # Packages can also be specified directly via e.g `use nix -p ocaml`,
-    #  # however those will not be added to the GC roots.
-    #  #
-    #  # The resulting environment is cached for better performance.
-    #  #
-    #  # To trigger switch to a different environment:
-    #  # `rm -f .direnv/default`
-    #  #
-    #  # To derive a new environment:
-    #  # `rm -rf .direnv/env-$(md5sum {shell,default}.nix 2> /dev/null | cut -c -32)`
-    #  #
-    #  # To remove cache:
-    #  # `rm -f .direnv/dump-*`
-    #  #
-    #  # To remove all environments:
-    #  # `rm -rf .direnv/env-*`
-    #  #
-    #  # To remove only old environments: 
-    #  # `find .direnv -name 'env-*' -and -not -name `readlink .direnv/default` -exec rm -rf {} +`
-    #  #
-    #  use_nix() {
-    #      set -e
+  };
 
-    #      local shell="shell.nix"
-    #      if [[ ! -f "''${shell}" ]]; then
-    #          shell="default.nix"
-    #      fi
-
-    #      if [[ ! -f "''${shell}" ]]; then
-    #          fail "use nix: shell.nix or default.nix not found in the folder"
-    #      fi
-
-    #      local dir="''${PWD}"/.direnv
-    #      local default="''${dir}/default"
-    #      if [[ ! -L "''${default}" ]] || [[ ! -d `readlink "''${default}"` ]]; then
-    #          local wd="''${dir}/env-`md5sum "''${shell}" | cut -c -32`" # TODO: Hash also the nixpkgs version?
-    #          mkdir -p "''${wd}"
-
-    #          local drv="''${wd}/env.drv"
-    #          if [[ ! -f "''${drv}" ]]; then
-    #              log_status "use nix: deriving new environment"
-    #              IN_NIX_SHELL=1 nix-instantiate --add-root "''${drv}" --indirect "''${shell}" > /dev/null
-    #              nix-store -r `nix-store --query --references "''${drv}"` --add-root "''${wd}/dep" --indirect > /dev/null
-    #          fi
-
-    #          rm -f "''${default}"
-    #          ln -s `basename "''${wd}"` "''${default}"
-    #      fi
-
-    #      local drv=`readlink -f "''${default}/env.drv"`
-    #      local dump="''${dir}/dump-`md5sum ".envrc" | cut -c -32`-`md5sum ''${drv} | cut -c -32`"
-
-    #      if [[ ! -f "''${dump}" ]] || [[ "''${XDG_CONFIG_DIR}/direnv/direnvrc" -nt "''${dump}" ]]; then
-    #          log_status "use nix: updating cache"
-
-    #          old=`find "''${dir}" -name 'dump-*'`
-    #          nix-shell "''${drv}" --show-trace "$@" --run 'direnv dump' > "''${dump}"
-    #          rm -f ''${old}
-    #      fi
-
-    #      direnv_load cat "''${dump}"
-
-    #      watch_file "''${default}"
-    #      watch_file shell.nix
-    #      if [[ ''${shell} == "default.nix" ]]; then
-    #          watch_file default.nix
-    #      fi
-    #  }
-    #'';
+  systemd.user.services.neuron = {
+    Unit.Description = "Neuron zettelkasten service";
+    Install.WantedBy = [ "graphical-session.target" ];
+    Service = {
+      ExecStart = "${neuron}/bin/neuron -d ${notesDir} rib -wS";
+    };
   };
 
   home.file.".gdbinit".text = ''
