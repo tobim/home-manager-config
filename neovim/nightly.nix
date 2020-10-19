@@ -5,61 +5,15 @@ let
     inherit buildVimPluginFrom2Nix;
   };
 
-  nofrils-vim = buildVimPluginFrom2Nix {
-    pname = "nofrils-vim";
-    version = "2019-10-30";
-    src = pkgs.fetchFromGitHub {
-      owner = "wilhelmtell";
-      repo = "nofrils";
-      rev = "b173be49412cbc4aa840eb5e6ec0d9ccb8914f7f";
-      sha256 = "1iy8inkckgnkghsqfnk1x07kbzrrwy01217lxf0bvmf4fxcy9y65";
-    };
-  };
-
-  currently_unused = ''
-    " => Plugin settings {{{
-    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-    " deoplete.nvim "{{{
-    let g:deoplete#enable_at_startup = 1
-    " }}}
-
-    " 'mhinz/neovim-remote' "{{{
-    if has('nvim')
-      let $VISUAL = 'nvr -cc split --remote-wait'
-    endif
-    "}}}
-
-    " 'mhinz/vim-signify' "{{{
-    "let g:signify_sign_overwrite=0 "}}}
-
-    " 'neoterm "{{{
-    let g:neoterm_autoscroll = 1
-    nnoremap <F3> :vertical :T make<CR>
-    nnoremap <F4> :vertical :T make test<CR>
-    " }}}
-
-    " 'sjl/gundo.vim' "{{{
-    "nnoremap <F5> :GundoToggle<CR> "}}}
-
-    " 'junegunn/vim-easy-align' "{{{
-        " Start interactive EasyAlign in visual mode
-        "vmap <Enter> <Plug>(EasyAlign)
-        " Start interactive EasyAlign with a Vim movement
-        "nmap <Leader>a <Plug>(EasyAlign) "}}}
-
-    " }}}
-  '';
-
   makeVim = { extraConfig ? "", plugins ? [ ] }:
     let
       plugins' =
-        builtins.filter (x: !(pkgs.lib.attrByPath [ "disabled" ] false x))
+        builtins.filter (x: !(pkgs.lib.attrByPath [ "disable" ] false x))
         plugins;
     in {
       enable = true;
 
-      withNodeJs = true;
+      withNodeJs = false;
       withPython = false;
       withPython3 = true;
 
@@ -75,12 +29,7 @@ in makeVim {
       config = ''
         let g:EditorConfig_max_line_indicator = "none"
       '';}
-    {
-      package = vim-asterisk;
-      disabled = true;
-    }
     { package = vim-polyglot; }
-    { package = nofrils-vim; }
     { package = customPlugins.clever-f-vim; }
     { package = customPlugins.distilled-vim; }
     { package = customPlugins.flatlandia; }
@@ -129,74 +78,109 @@ in makeVim {
         endfunction
       '';
     }
-    { package = vim-addon-nix; }
     {
-      package = LanguageClient-neovim;
+      disable = true;
+      package = customPlugins.nvim-treesitter;
       config = ''
-        let g:LanguageClient_serverCommands = {
-            \ 'c': ['clangd', '-background-index'],
-            \ 'cpp': ['clangd', '-background-index'],
-            \ 'haskell': ['hie', '--lsp'],
-            \ 'nix': ['${pkgs.rnix-lsp}/bin/rnix-lsp'],
-            \ 'python': ['pyls'],
-            \ 'rust': ['rustup', 'run', 'nightly', 'rls'],
-            \ }
-
-        " Automatically start language servers.
-        let g:LanguageClient_autoStart = 1
-        let g:LanguageClient_loadSettings = 1
-        let g:LanguageClient_hasSnippetSupport = 0
-        " Use an absolute configuration path if you want system-wide settings
-        let g:LanguageClient_settingsPath = '/home/tobim/.config/nvim/settings.json'
-        set completefunc=LanguageClient#complete
-        set formatexpr=LanguageClient_textDocument_rangeFormatting()
-
-        nnoremap <silent> gh :call LanguageClient_textDocument_hover()<CR>
-        nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
-        nnoremap <silent> gr :call LanguageClient_textDocument_references()<CR>
-        nnoremap <silent> gs :call LanguageClient_textDocument_documentSymbol()<CR>
-        nnoremap <silent> gF :call LanguageClient_textDocument_formatting()<CR>
-        vnoremap <silent> gF :call LanguageClient_textDocument_formatting()<CR>
-        nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
-
-        nnoremap <silent> zk :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'L'})<cr>
-        nnoremap <silent> zl :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'D'})<cr>
-        nnoremap <silent> zh :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'U'})<cr>
-        nnoremap <silent> zj :call LanguageClient#findLocations({'method':'$ccls/navigate','direction':'R'})<cr>
-
-        " bases
-        nn <silent> zb :call LanguageClient#findLocations({'method':'$ccls/inheritance'})<cr>
-        " bases of up to 3 levels
-        nn <silent> zB :call LanguageClient#findLocations({'method':'$ccls/inheritance','levels':3})<cr>
-        " derived
-        nn <silent> zd :call LanguageClient#findLocations({'method':'$ccls/inheritance','derived':v:true})<cr>
-        " derived of up to 3 levels
-        nn <silent> zD :call LanguageClient#findLocations({'method':'$ccls/inheritance','derived':v:true,'levels':3})<cr>
-
-        " caller
-        nn <silent> zc :call LanguageClient#findLocations({'method':'$ccls/call'})<cr>
-        " callee
-        nn <silent> zC :call LanguageClient#findLocations({'method':'$ccls/call','callee':v:true})<cr>
-
-        " $ccls/member
-        " nested classes / types in a namespace
-        nn <silent> zs :call LanguageClient#findLocations({'method':'$ccls/member','kind':2})<cr>
-        " member functions / functions in a namespace
-        nn <silent> zf :call LanguageClient#findLocations({'method':'$ccls/member','kind':3})<cr>
-        " member variables / variables in a namespace
-        nn <silent> zm :call LanguageClient#findLocations({'method':'$ccls/member'})<cr>
-
-        augroup LanguageClient_config
-          au!
-          au BufEnter * let b:Plugin_LanguageClient_started = 0
-          au User LanguageClientStarted setl signcolumn=yes
-          au User LanguageClientStarted let b:Plugin_LanguageClient_started = 1
-          au User LanguageClientStopped setl signcolumn=auto
-          au User LanguageClientStopped let b:Plugin_LanguageClient_stopped = 0
-          au CursorMoved * if b:Plugin_LanguageClient_started | sil call LanguageClient#textDocument_documentHighlight() | endif
-        augroup END
+        lua <<EOF
+        vim.cmd('packadd nvim-treesitter')
+        require'nvim-treesitter.configs'.setup {
+          ensure_installed = "all",     -- one of "all", "language", or a list of languages
+          highlight = {
+            enable = true,              -- false will disable the whole extension
+            disable = { "c" },          -- list of language that will be disabled
+          },
+        }
+        EOF
       '';
     }
+    {
+      package = customPlugins.nvim-lspconfig;
+      config = ''
+        lua <<EOF
+        vim.cmd('packadd nvim-lspconfig')
+        local nvim_lsp = require('nvim_lsp')
+
+        vim.cmd('packadd lsp-status-nvim')
+        local lsp_status = require('lsp-status')
+
+        vim.cmd('packadd diagnostic-nvim')
+        local diagnostic = require('diagnostic')
+
+        local on_attach = function(client, bufnr)
+          lsp_status.on_attach(client, bufnr)
+          diagnostic.on_attach(client, bufnr)
+          --completion.on_attach(client, bufnr)
+        end
+
+        lsp_status.register_progress()
+        lsp_status.config({
+          status_symbol = ''',
+          indicator_errors = 'e',
+          indicator_warnings = 'w',
+          indicator_info = 'i',
+          indicator_hint = 'h',
+          indicator_ok = '✔️',
+          spinner_frames = { '⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷' },
+        })
+
+        nvim_lsp.ccls.setup{
+          on_attach = on_attach,
+          capabilities = lsp_status.capabilities
+        }
+        nvim_lsp.hls.setup{
+          on_attach = on_attach,
+          capabilities = lsp_status.capabilities
+        }
+        nvim_lsp.rnix.setup{
+          on_attach = on_attach,
+          capabilities = lsp_status.capabilities
+        }
+        nvim_lsp.rust_analyzer.setup{
+          on_attach = on_attach,
+          capabilities = lsp_status.capabilities
+        }
+        EOF
+
+        nnoremap <silent> gd    <cmd>lua vim.lsp.buf.declaration()<CR>
+        nnoremap <silent> <c-]> <cmd>lua vim.lsp.buf.definition()<CR>
+        nnoremap <silent> K     <cmd>lua vim.lsp.buf.hover()<CR>
+        nnoremap <silent> gD    <cmd>lua vim.lsp.buf.implementation()<CR>
+        "nnoremap <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
+        nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
+        nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
+        nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
+        nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
+      '';
+    }
+    {
+      package = customPlugins.lsp-status-nvim;
+      config = ''
+        function! LspStatus() abort
+          if luaeval('#vim.lsp.buf_get_clients() > 0')
+            return luaeval("require('lsp-status').status()")
+          endif
+          return '''
+        endfunction
+
+        set statusline=%f\ %h%w%m%r%=%{LspStatus()}\ %-14.(%l,%c%V%)\ %P
+      '';
+    }
+    {
+      package = customPlugins.completion-nvim;
+      config = ''
+        " Use completion-nvim in every buffer
+        autocmd BufEnter * lua require'completion'.on_attach()
+
+        " Set completeopt to have a better completion experience
+        set completeopt=menuone,noinsert,noselect
+
+        " Avoid showing message extra message when using completion
+        set shortmess+=c
+      '';
+    }
+    { package = customPlugins.diagnostic-nvim; }
+    { package = vim-addon-nix; }
     {
       package = customPlugins.vim-altr;
       config = ''
@@ -220,23 +204,6 @@ in makeVim {
       '';
     }
     { package = nvim-yarp; }
-    {
-      package = ncm2;
-      config = ''
-        " enable ncm2 for all buffers
-        autocmd BufEnter * call ncm2#enable_for_buffer()
-        " IMPORTANT: :help Ncm2PopupOpen for more information
-        set completeopt=noinsert,menuone,noselect
-
-        autocmd BufReadPost * call ncm2#override_source('LanguageClient_cpp', {'filter': {
-            \ 'name':'substitute',
-            \ 'pattern': '^([a-zA-Z0-9_]+\(?).*',
-            \ 'replace': '\1',
-            \ 'key': 'word'}})
-      '';
-    }
-    { package = ncm2-bufword; }
-    { package = float-preview-nvim; }
     { package = customPlugins.vimagit; }
     {
       package = customPlugins.vista-vim;
@@ -303,24 +270,13 @@ in makeVim {
     "hi ActiveWindow guibg=#17252c
     "hi InactiveWindow guibg=#0D1B22
 
-    "" Call method on window enter
-    "augroup WindowManagement
-    "  autocmd!
-    "  autocmd WinEnter * call Handle_Win_Enter()
-    "augroup END
-
-    "" Change highlight group of active/inactive windows
-    "function! Handle_Win_Enter()
-    "  setlocal winhighlight=Normal:ActiveWindow,NormalNC:InactiveWindow
-    "endfunction
-
     " Set 7 lines to the cursor - when moving vertically using j/k
     set so=7
 
     " enable the pop-up-list for command and argument completion in
     " command mode
-    set wildmenu
-    set wildmode=list:longest,full
+    "set wildmenu
+    "set wildmode=list:longest,full
 
     " do not ask for confirmation after displaying messages
     set shortmess+=filmnrxoOtT
@@ -339,10 +295,10 @@ in makeVim {
     set smartcase
 
     "" enable auto indentation and set tab width
-    set smartindent
-    set shiftwidth=4
-    set softtabstop=4
-    set tabstop=4
+    "set smartindent
+    "set shiftwidth=4
+    "set softtabstop=4
+    "set tabstop=4
 
     " always convert tabs to spaces
     set expandtab
@@ -404,9 +360,6 @@ in makeVim {
 
     " append current line to the next
     nnoremap <leader>J :m+1<CR>kJ
-
-    command! -nargs=+ Cppman silent! call system("tmux split-window cppman " . expand(<q-args>))
-    autocmd FileType cpp nnoremap <silent><buffer> K <Esc>:Cppman <cword><CR>
 
     " => Command-line Mode keymappings
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""

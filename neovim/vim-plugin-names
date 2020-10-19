@@ -9,6 +9,11 @@ kana/vim-altr
 KKPMW/distilled-vim
 liuchengxu/vim-clap
 liuchengxu/vista.vim
+neovim/nvim-lspconfig
+nvim-lua/completion-nvim
+nvim-lua/diagnostic-nvim
+nvim-lua/lsp-status.nvim
+nvim-treesitter/nvim-treesitter
 rhysd/clever-f.vim
 rhysd/git-messenger.vim
 rhysd/vim-clang-format
