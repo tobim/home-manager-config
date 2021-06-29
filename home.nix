@@ -17,6 +17,13 @@ let
           neuronSrc = builtins.fetchTarball "https://github.com/srid/neuron/archive/${neuronRev}.tar.gz";
        in import neuronSrc {});
 
+    #doom-emacs = pkgs.callPackage (builtins.fetchTarball {
+    #    url = https://github.com/vlaci/nix-doom-emacs/archive/master.tar.gz;
+    #  }) {
+    #    doomPrivateDir = ./doom.d;  # Directory containing your config.el init.el
+    #                                # and packages.el files
+    #  };
+
     weechat-notify = pkgs.weechat.override {
       configure = { availablePlugins, ... }: {
         scripts = with pkgs.weechatScripts; [
@@ -40,7 +47,7 @@ let
     ];
 
     linux_packages = [
-      pkgs.aqbanking
+      #pkgs.aqbanking
       pkgs.chromium
       pkgs.dtrx
       pkgs.gnome3.glib-networking
@@ -64,6 +71,7 @@ let
     ];
 
     home_packages = with pkgs; [
+      #doom-emacs
       neuron
       pkgs.beets
       pkgs.hledger
@@ -72,6 +80,7 @@ let
       pkgs.playerctl
       pkgs.signal-desktop
       pkgs.slack
+      pkgs.teams
       pkgs.wmc-mpris
       pkgs.youtube-dl
       pkgs.zoom-us
@@ -84,6 +93,7 @@ let
       pkgs.bandwhich
       pkgs.bat
       pkgs.cachix
+      pkgs.cargo
       pkgs.ccache
       pkgs.ccls
       pkgs.cmake
@@ -93,8 +103,10 @@ let
       pkgs.exa
       pkgs.fd
       pkgs.file
-      pkgs.fish-foreign-env
+      pkgs.fishPlugins.foreign-env
+      #pkgs.fishPlugins.done
       pkgs.fzf
+      pkgs.gcsfuse
       pkgs.git
       pkgs.gitAndTools.git-gone
       pkgs.gitAndTools.git-imerge
@@ -113,11 +125,14 @@ let
       pkgs.neovim-remote
       pkgs.ninja
       pkgs.notmuch
+      pkgs.parallel
       pkgs.pass
       pkgs.passff-host
+      pkgs.psmisc
       pkgs.ripgrep
       pkgs.rnix-lsp
       pkgs.rust-analyzer
+      pkgs.rustc
       pkgs.syncthing
       pkgs.taskwarrior
       pkgs.tectonic
@@ -143,7 +158,6 @@ let
       ))
     ];
 
-
 in
 {
   nixpkgs.overlays = [ 
@@ -155,6 +169,9 @@ in
   imports = [ ./modules/neovim-nightly.nix ];
 
   home = {
+    stateVersion = "21.03";
+    username = "tobim";
+    homeDirectory = "/home/tobim";
     packages = default_packages ++ python_packages ++ fonts ++
       (if on_linux then linux_packages ++ home_packages
       else if on_darwin then darwin_packages
@@ -162,6 +179,7 @@ in
 
     sessionVariables = {
       BLOCK_SIZE = "'1";
+      BROWSER = "firefox";
       VISUAL = "nn";
       EDITOR = "nn";
       GS_OPTIONS = "-sPAPERSIZE=a4";
@@ -191,7 +209,7 @@ in
 
   # Disable gnome-keyring ssh-agent
   xdg.configFile."autostart/gnome-keyring-ssh.desktop".text = if on_linux then ''
-    ${pkgs.stdenv.lib.fileContents "${pkgs.gnome3.gnome-keyring}/etc/xdg/autostart/gnome-keyring-ssh.desktop"}
+    ${pkgs.lib.fileContents "${pkgs.gnome3.gnome-keyring}/etc/xdg/autostart/gnome-keyring-ssh.desktop"}
     Hidden=true
   '' else "";
 
@@ -220,6 +238,11 @@ in
   programs.firefox = {
     enable = !on_darwin;
     package = pkgs.firefox-wayland;
+    #package = pkgs.wrapFirefox pkgs.firefox-unwrapped {
+    #  extraPolicies = {
+    #    ExtensionSettings = {};
+    #  };
+    #};
   };
   programs.browserpass.enable = true;
 
@@ -230,7 +253,9 @@ in
       gg = "git grep";
     };
 
-    shellAliases = lib.optionalAttrs on_linux {
+    shellAliases = {
+      gs = "git st";
+    } // lib.optionalAttrs on_linux {
       ip = "ip -br -c";
     };
 
@@ -270,6 +295,18 @@ in
       end
     '';
 
+    plugins = [
+      {
+        name = "z";
+        src = pkgs.fetchFromGitHub {
+          owner = "franciscolourenco";
+          repo = "done";
+          rev = "1.16.1";
+          sha256 = "09m8sjnlhagv44hk0vmh48q6kdmv9mb55v3gcpbkb02r6hmsqp1l";
+        };
+      }
+    ];
+
     interactiveShellInit = ''
       function mkcd --description 'Create and enter a directory'
         mkdir -p $argv[1]; and cd $argv[1];
@@ -297,10 +334,41 @@ in
 
   programs.zsh = {
     enable = true;
-      initExtra = ''
-        source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-        source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/config/p10k-lean.zsh
-      '';
+    #initExtra = ''
+    #  source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+    #  source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/config/p10k-lean.zsh
+    #'';
+    autocd = true;
+    dotDir = ".config/zsh";
+    shellAliases = {
+      ll = "ls -l";
+      la = "ls -la";
+    };
+    initExtra = ''
+      any-nix-shell zsh --info-right | source /dev/stdin
+    '';
+  };
+
+  programs.starship = {
+    enable = true;
+
+    enableZshIntegration = true;
+    enableFishIntegration = false;
+
+    settings = {
+      #add_newline = false;
+      #format = lib.concatStrings [
+      #  "$line_break"
+      #  "$package"
+      #  "$line_break"
+      #  "$character"
+      #];
+      #scan_timeout = 10;
+      #character = {
+      #  success_symbol = "➜";
+      #  error_symbol = "➜";
+      #};
+    };
   };
 
   programs.git = {
@@ -313,28 +381,15 @@ in
     };
     aliases = {
       st = "status --short --branch";
-      ci = "commit";
-      bclean = ''
-        "!f() { \
-           force=F;\
-           while getopts \"f\" opt; do\
-             case \"$opt\" in f) force=T;;\
-             esac;\
-           done;\
-           shift $(expr $OPTIND - 1);\
-           cmd=(-L 1 echo);\
-           if [ \"$force\" = \"T\" ]; then\
-             cmd=(git branch -d);\
-           fi;\
-           git branch --merged ''${1-master} | grep -v \" ''${1-master}$\" | xargs -r ''${cmd[@]}; };\
-         f"'';
-      amend = "commit --amend";
-      undo = "reset --soft HEAD^";
-      tracking = "for-each-ref --format='%(upstream:short)' $(git rev-parse --symbolic-full-name HEAD)";
-      raze = "!f() { git reset --hard $(git tracking) }; f";
-      glog = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'";
-      grog = "log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)'";
-      #sub = "!f() { git grep -l $1 | xargs sed -i 's|$1|$2|g' }; f"
+      amend =    "commit --amend";
+      undo =     "reset --soft HEAD^";
+      tracking = "!f() { git for-each-ref --format='%(upstream:short)' \"$(git rev-parse --symbolic-full-name \${1:-HEAD})\"; }; f";
+      raze =     "!f() { git reset --hard \"$(git tracking)\"; }; f";
+      recommit = "!f() { git commit -eF \"$(git rev-parse --git-dir)/COMMIT_EDITMSG\"; }; f";
+      glog =     "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'";
+      grog =     "log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)'";
+      sub = "!f() { git grep -l $1 | xargs sed -i 's|$1|$2|g'; }; f";
+      news = "!f() { git log --merges --format=\"%C(green)%cr%C(reset) %C(yellow)%h%C(reset) %b%C(#CFCFCF)%+N%C(reset)\" \"\$(git describe --first-parent --abbrev=0)\".. \"\$@\"; }; f";
     };
     extraConfig=''
       [merge]
@@ -349,6 +404,7 @@ in
         ff = only
     '';
     ignores = [
+      ".cache/"
       ".ccls-cache/"
       ".clangd/"
       ".direnv/"
@@ -360,7 +416,6 @@ in
     extraPackages = epkgs: [
       epkgs.magit
       epkgs.evil
-      epkgs.evil-magit
       epkgs.evil-org
       epkgs.which-key
     ];
@@ -370,7 +425,7 @@ in
   programs.neovim-nightly = import ./neovim/nightly.nix {inherit pkgs;};
 
   programs.mpv = {
-    enable = true;
+    enable = false;
   };
 
   programs.gnome-terminal = if on_linux then {
@@ -450,13 +505,13 @@ in
     enableFishIntegration = true;
   };
 
-  systemd.user.services.neuron = {
-    Unit.Description = "Neuron zettelkasten service";
-    Install.WantedBy = [ "graphical-session.target" ];
-    Service = {
-      ExecStart = "${neuron}/bin/neuron -d ${notesDir} rib -wS";
-    };
-  };
+  #systemd.user.services.neuron = {
+  #  Unit.Description = "Neuron zettelkasten service";
+  #  Install.WantedBy = [ "graphical-session.target" ];
+  #  Service = {
+  #    ExecStart = "${neuron}/bin/neuron -d ${notesDir} rib -wS";
+  #  };
+  #};
 
   home.file.".gdbinit".text = ''
     set history save on

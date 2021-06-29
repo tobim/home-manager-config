@@ -60,7 +60,6 @@ let
       enable = true;
 
       withNodeJs = true;
-      withPython = false;
       withPython3 = true;
 
       plugins = builtins.map (builtins.getAttr "package") plugins';
@@ -88,8 +87,6 @@ in makeVim {
     { package = customPlugins.nova-vim; }
     { package = customPlugins.nord-vim; }
     { package = customPlugins.vim-substrata; }
-    { package = customPlugins.vim-clap; }
-    { package = customPlugins.vim-visual-star-search; }
     { package = fzfWrapper; }
     {
       package = fzf-vim;
@@ -198,7 +195,7 @@ in makeVim {
       '';
     }
     {
-      package = customPlugins.vim-altr;
+      package = vim-altr;
       config = ''
         nmap <silent> gj <Plug>(altr-forward)
         nmap <silent> gk <Plug>(altr-back)
@@ -212,7 +209,7 @@ in makeVim {
         let g:localvimrc_persistence_file = expand(dataDir . '/localvimrc_persistent')
       '';
     }
-    { package = customPlugins.vim-pasta; }
+    { package = vim-pasta; }
     { package = vim-textobj-user; }
     {
       package = vim-gitgutter;
@@ -237,9 +234,9 @@ in makeVim {
     }
     { package = ncm2-bufword; }
     { package = float-preview-nvim; }
-    { package = customPlugins.vimagit; }
+    { package = vimagit; }
     {
-      package = customPlugins.vista-vim;
+      package = vista-vim;
       config = ''
         " How each level is indented and what to prepend.
         " This could make the display more compact or more spacious.
@@ -268,8 +265,8 @@ in makeVim {
         endfunction
       '';
     }
-    { package = customPlugins.git-messenger-vim; }
-    { package = customPlugins.vim-textobj-variable-segment; }
+    { package = git-messenger-vim; }
+    { package = vim-textobj-variable-segment; }
     { package = undotree; }
   ];
 

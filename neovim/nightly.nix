@@ -14,7 +14,6 @@ let
       enable = true;
 
       withNodeJs = false;
-      withPython = false;
       withPython3 = true;
 
       plugins = builtins.map (builtins.getAttr "package") plugins';
@@ -30,14 +29,15 @@ in makeVim {
         let g:EditorConfig_max_line_indicator = "none"
       '';}
     { package = vim-polyglot; }
+    { package = targets-vim; }
     { package = customPlugins.clever-f-vim; }
     { package = customPlugins.distilled-vim; }
     { package = customPlugins.flatlandia; }
-    { package = customPlugins.iceberg-vim; }
+    { package = iceberg-vim; }
     { package = customPlugins.nova-vim; }
     { package = customPlugins.nord-vim; }
     { package = customPlugins.vim-substrata; }
-    { package = customPlugins.vim-clap; }
+    { package = vim-clap; }
     { package = customPlugins.vim-visual-star-search; }
     { package = fzfWrapper; }
     {
@@ -80,7 +80,7 @@ in makeVim {
     }
     {
       disable = true;
-      package = customPlugins.nvim-treesitter;
+      package = nvim-treesitter;
       config = ''
         lua <<EOF
         vim.cmd('packadd nvim-treesitter')
@@ -95,23 +95,15 @@ in makeVim {
       '';
     }
     {
-      package = customPlugins.nvim-lspconfig;
+      package = nvim-lspconfig;
       config = ''
         lua <<EOF
         vim.cmd('packadd nvim-lspconfig')
-        local nvim_lsp = require('nvim_lsp')
+        local lspconfig = require('lspconfig')
+        local util = require 'lspconfig/util'
 
         vim.cmd('packadd lsp-status-nvim')
         local lsp_status = require('lsp-status')
-
-        vim.cmd('packadd diagnostic-nvim')
-        local diagnostic = require('diagnostic')
-
-        local on_attach = function(client, bufnr)
-          lsp_status.on_attach(client, bufnr)
-          diagnostic.on_attach(client, bufnr)
-          --completion.on_attach(client, bufnr)
-        end
 
         lsp_status.register_progress()
         lsp_status.config({
@@ -124,37 +116,84 @@ in makeVim {
           spinner_frames = { '⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷' },
         })
 
-        nvim_lsp.ccls.setup{
-          on_attach = on_attach,
+        --lspconfig.ccls.setup{
+        --  on_attach = on_attach,
+        --  capabilities = lsp_status.capabilities
+        --}
+        lspconfig.pyls_ms.setup{
           capabilities = lsp_status.capabilities
         }
-        nvim_lsp.hls.setup{
-          on_attach = on_attach,
+        lspconfig.clangd.setup{
           capabilities = lsp_status.capabilities
         }
-        nvim_lsp.rnix.setup{
-          on_attach = on_attach,
+        lspconfig.hls.setup{
           capabilities = lsp_status.capabilities
         }
-        nvim_lsp.rust_analyzer.setup{
-          on_attach = on_attach,
+        lspconfig.rnix.setup{
           capabilities = lsp_status.capabilities
         }
-        EOF
+        lspconfig.rust_analyzer.setup{
+          capabilities = lsp_status.capabilities,
+          root_dir = util.root_pattern("Cargo.toml", "rust-project.json")
+        }
 
-        nnoremap <silent> gd    <cmd>lua vim.lsp.buf.declaration()<CR>
-        nnoremap <silent> <c-]> <cmd>lua vim.lsp.buf.definition()<CR>
-        nnoremap <silent> K     <cmd>lua vim.lsp.buf.hover()<CR>
-        nnoremap <silent> gD    <cmd>lua vim.lsp.buf.implementation()<CR>
-        "nnoremap <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
-        nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
-        nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
-        nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
-        nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
+        local on_attach = function(client, bufnr)
+          lsp_status.on_attach(client, bufnr)
+          --completion.on_attach(client, bufnr)
+          local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+          local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+
+          buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+          local opts = { noremap=true, silent=true }
+          buf_set_keymap('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+          buf_set_keymap('n', '<c-]>', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+          buf_set_keymap('n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+          buf_set_keymap('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+          buf_set_keymap('n', '1gD', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+          buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+          buf_set_keymap('n', 'g0', '<cmd>lua vim.lsp.buf.document_symbol()<CR>', opts)
+          buf_set_keymap('n', 'gW', '<cmd>lua vim.lsp.buf.workspace_symbol()<CR>', opts)
+          buf_set_keymap('n', '[d', '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>', opts)
+          buf_set_keymap('n', ']d', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
+          buf_set_keymap('n', 'gl', '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>', opts)
+
+          -- Set some keybinds conditional on server capabilities
+          if client.resolved_capabilities.document_formatting then
+            buf_set_keymap('n', 'gq', "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
+          end
+          if client.resolved_capabilities.document_range_formatting then
+            buf_set_keymap('v', 'gq', "<cmd>lua vim.lsp.buf.range_formatting()<CR>", opts)
+          end
+
+          -- Set autocommands conditional on server_capabilities
+          if client.resolved_capabilities.document_highlight then
+            require('lspconfig').util.nvim_multiline_command [[
+              :hi LspReferenceRead cterm=bold ctermbg=red guibg=LightYellow
+              :hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
+              :hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow
+              augroup lsp_document_highlight
+                autocmd!
+                autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
+                autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
+              augroup END
+            ]]
+          end
+        end
+
+        -- Use a loop to conveniently both setup defined servers 
+        -- and map buffer local keybindings when the language server attaches
+        --local servers = { "clangd", "rust_analyzer", "rnix", "hls" }
+        local servers = { "clangd", "rnix", "hls" }
+        for _, lsp in ipairs(servers) do
+          lspconfig[lsp].setup { on_attach = on_attach }
+        end
+
+        EOF
       '';
     }
     {
-      package = customPlugins.lsp-status-nvim;
+      package = lsp-status-nvim;
       config = ''
         function! LspStatus() abort
           if luaeval('#vim.lsp.buf_get_clients() > 0')
@@ -167,7 +206,7 @@ in makeVim {
       '';
     }
     {
-      package = customPlugins.completion-nvim;
+      package = completion-nvim;
       config = ''
         " Use completion-nvim in every buffer
         autocmd BufEnter * lua require'completion'.on_attach()
@@ -179,7 +218,6 @@ in makeVim {
         set shortmess+=c
       '';
     }
-    { package = customPlugins.diagnostic-nvim; }
     { package = vim-addon-nix; }
     {
       package = customPlugins.vim-altr;
@@ -196,7 +234,7 @@ in makeVim {
         let g:localvimrc_persistence_file = expand(dataDir . '/localvimrc_persistent')
       '';
     }
-    { package = customPlugins.vim-pasta; }
+    { package = vim-pasta; }
     { package = vim-textobj-user; }
     {
       package = vim-gitgutter;
@@ -204,9 +242,9 @@ in makeVim {
       '';
     }
     { package = nvim-yarp; }
-    { package = customPlugins.vimagit; }
+    { package = vimagit; }
     {
-      package = customPlugins.vista-vim;
+      package = vista-vim;
       config = ''
         " How each level is indented and what to prepend.
         " This could make the display more compact or more spacious.
@@ -235,8 +273,8 @@ in makeVim {
         endfunction
       '';
     }
-    { package = customPlugins.git-messenger-vim; }
-    { package = customPlugins.vim-textobj-variable-segment; }
+    { package = git-messenger-vim; }
+    { package = vim-textobj-variable-segment; }
     { package = undotree; }
   ];
 
