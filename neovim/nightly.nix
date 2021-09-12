@@ -79,13 +79,13 @@ in makeVim {
       '';
     }
     {
-      disable = true;
+      #disable = true;
       package = nvim-treesitter;
       config = ''
         lua <<EOF
         vim.cmd('packadd nvim-treesitter')
         require'nvim-treesitter.configs'.setup {
-          ensure_installed = "all",     -- one of "all", "language", or a list of languages
+          --ensure_installed = "all",     -- one of "all", "language", or a list of languages
           highlight = {
             enable = true,              -- false will disable the whole extension
             disable = { "c" },          -- list of language that will be disabled
@@ -120,7 +120,13 @@ in makeVim {
         --  on_attach = on_attach,
         --  capabilities = lsp_status.capabilities
         --}
-        lspconfig.pyls_ms.setup{
+        --lspconfig.pyls_ms.setup{
+        --  capabilities = lsp_status.capabilities
+        --}
+        lspconfig.pyright.setup{
+          capabilities = lsp_status.capabilities
+        }
+        lspconfig.pylsp.setup{
           capabilities = lsp_status.capabilities
         }
         lspconfig.clangd.setup{
@@ -164,20 +170,6 @@ in makeVim {
           end
           if client.resolved_capabilities.document_range_formatting then
             buf_set_keymap('v', 'gq', "<cmd>lua vim.lsp.buf.range_formatting()<CR>", opts)
-          end
-
-          -- Set autocommands conditional on server_capabilities
-          if client.resolved_capabilities.document_highlight then
-            require('lspconfig').util.nvim_multiline_command [[
-              :hi LspReferenceRead cterm=bold ctermbg=red guibg=LightYellow
-              :hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
-              :hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow
-              augroup lsp_document_highlight
-                autocmd!
-                autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
-                autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
-              augroup END
-            ]]
           end
         end
 
@@ -298,7 +290,7 @@ in makeVim {
 
     "set background=dark
     set termguicolors
-    colorscheme substrata
+    colorscheme nord
 
     set ruler
     set cmdheight=2

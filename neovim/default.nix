@@ -195,7 +195,7 @@ in makeVim {
       '';
     }
     {
-      package = vim-altr;
+      package = customPlugins.vim-altr;
       config = ''
         nmap <silent> gj <Plug>(altr-forward)
         nmap <silent> gk <Plug>(altr-back)

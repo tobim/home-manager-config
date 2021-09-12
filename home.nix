@@ -60,7 +60,7 @@ let
       pkgs.qutebrowser
       #pkgs.waybar
       pkgs.wl-clipboard
-      pkgs.xournal
+      pkgs.xournalpp
       #haskellPackages.buchhaltung
     ] ++ gst_packages;
 
@@ -86,7 +86,21 @@ let
       pkgs.zoom-us
     ];
 
+    py3 = pkgs.python3.withPackages(ps: with ps; [
+      black
+      flake8
+      pylint
+      yapf
+      pyflakes
+      pyls-isort
+      pylsp-mypy
+      python-lsp-black
+      python-lsp-server
+      rope
+    ]);
+
     default_packages = [
+      py3
       pkgs._1password
       pkgs.alacritty
       pkgs.any-nix-shell
@@ -139,24 +153,35 @@ let
       pkgs.tmux
       pkgs.tokei
       pkgs.tree
+      pkgs.pyright
       weechat
     ];
 
-    python_packages = [
-      (pkgs.python3.withPackages (ps: with ps; [
-        black
-        flake8
-        pylint
-        yapf
-      ]
-      ++ (if (builtins.hasAttr "python-language-server" ps) then with ps;[
-        python-language-server
-        pyls-mypy
-        pyls-isort
-        rope
-      ] else [])
-      ))
-    ];
+    #python_packages = let
+    #  python = let
+    #    packageOverrides = final: prev: {
+    #      pyls-black = prev.pyls-black.override {
+    #        python-language-server = final.python-lsp-server;
+    #      };
+    #      pyls-mypy = prev.pyls-mypy.override {
+    #        python-language-server = final.python-lsp-server;
+    #      };
+    #    };
+    #  in pkgs.python3.override {inherit packageOverrides; self = python;};
+    #in [
+    #  python.withPackages (ps: with ps; [
+    #    black
+    #    flake8
+    #    pylint
+    #    yapf
+    #    pyflakes
+    #    pyls-mypy
+    #    pyls-isort
+    #    python-lsp-server
+    #    python-lsp-black
+    #    rope
+    #  ])
+    #];
 
 in
 {
@@ -172,7 +197,7 @@ in
     stateVersion = "21.03";
     username = "tobim";
     homeDirectory = "/home/tobim";
-    packages = default_packages ++ python_packages ++ fonts ++
+    packages = default_packages ++ fonts ++
       (if on_linux then linux_packages ++ home_packages
       else if on_darwin then darwin_packages
       else []);
@@ -251,6 +276,7 @@ in
 
     shellAbbrs = {
       gg = "git grep";
+      gd = "git diff";
     };
 
     shellAliases = {
@@ -390,19 +416,15 @@ in
       grog =     "log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)'";
       sub = "!f() { git grep -l $1 | xargs sed -i 's|$1|$2|g'; }; f";
       news = "!f() { git log --merges --format=\"%C(green)%cr%C(reset) %C(yellow)%h%C(reset) %b%C(#CFCFCF)%+N%C(reset)\" \"\$(git describe --first-parent --abbrev=0)\".. \"\$@\"; }; f";
+      base = "!f() { git reflog --no-abbrev --all | grep \"refs/heads/$(git name-rev --name-only HEAD)@{[0-9]\+}: branch: Created from\" | cut -d' ' -f 1; }; f";
     };
-    extraConfig=''
-      [merge]
-        tool = vimdiff
-      [mergetool]
-        prompt = true
-      [mergetool "vimdiff"]
-        cmd = nn -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
-      [transfer]
-        fschkobjects = true
-      [pull]
-        ff = only
-    '';
+    extraConfig = {
+      merge.tool = "vimdiff";
+      mergetool.prompt = true;
+      "mergetool \"vimdiff\"".cmd = "nn -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'";
+      transfer.fschkobjects = true;
+      pull.ff = "only";
+    };
     ignores = [
       ".cache/"
       ".ccls-cache/"
@@ -421,6 +443,17 @@ in
     ];
   };
 
+  home.file."${config.xdg.configHome}/nvim/parser/bash.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-bash}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/cpp.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-cpp}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/haskell.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-haskell}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/json.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-json}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/markdown.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-markdown}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/nix.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-nix}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/python.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-python}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/rust.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-rust}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/toml.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-toml}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/yaml.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-yaml}/parser";
+  home.file."${config.xdg.configHome}/nvim/parser/zig.so".source = "${pkgs.tree-sitter.builtGrammars.tree-sitter-zig}/parser";
   programs.neovim = import ./neovim {inherit pkgs;};
   programs.neovim-nightly = import ./neovim/nightly.nix {inherit pkgs;};
 

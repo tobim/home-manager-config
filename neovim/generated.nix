@@ -83,12 +83,12 @@ let
 
   nord-vim = buildVimPluginFrom2Nix {
     pname = "nord-vim";
-    version = "2020-07-06";
+    version = "0.16.0";
     src = fetchFromGitHub {
-      owner = "arcticicestudio";
+      owner = "crispgm";
       repo = "nord-vim";
-      rev = "57dffa746907e8ce5c4b520146ed0d89d3c29a51";
-      sha256 = "0xpz71rj74514789v6x9wrg95n8bsag8f5ygd7js40qrwpxq6b4j";
+      rev = "ce886db2a58b147b926b92b1f8086a3d777f708a";
+      sha256 = "001kjg290hc85j2gvx7mnrypcvp5p1vm9f1q6pzzysiqclg01j92";
     };
   };
 
