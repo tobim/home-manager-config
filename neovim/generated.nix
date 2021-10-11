@@ -4,17 +4,6 @@
 let
   packages = ( self:
 {
-  clever-f-vim = buildVimPluginFrom2Nix {
-    pname = "clever-f-vim";
-    version = "2021-05-14";
-    src = fetchFromGitHub {
-      owner = "rhysd";
-      repo = "clever-f.vim";
-      rev = "658384e0f89fc31dba94e71eae2484cabe1ad7d0";
-      sha256 = "1jg9k74yw3cgqbk1xx74bhq2b0al7sas7g03dxf55riycmy0czmb";
-    };
-  };
-
   completion-nvim = buildVimPluginFrom2Nix {
     pname = "completion-nvim";
     version = "2021-04-08";
@@ -67,28 +56,6 @@ let
       repo = "iceberg.vim";
       rev = "866f9f4ac9ff9a0ae33de96253c359c68ab556b4";
       sha256 = "1zlj85xg8r8qbnr7dpszkcjqw70xahay7ydwnik0zwhq96mic1pv";
-    };
-  };
-
-  lsp-status-nvim = buildVimPluginFrom2Nix {
-    pname = "lsp-status-nvim";
-    version = "2021-05-20";
-    src = fetchFromGitHub {
-      owner = "nvim-lua";
-      repo = "lsp-status.nvim";
-      rev = "54c395248539d65fddda46f7d92e3421856874c1";
-      sha256 = "1qfrfckdbqyav8l1g7lwpjrrwh559nm71ki74qd1xd18y1h63ny2";
-    };
-  };
-
-  nord-vim = buildVimPluginFrom2Nix {
-    pname = "nord-vim";
-    version = "0.16.0";
-    src = fetchFromGitHub {
-      owner = "crispgm";
-      repo = "nord-vim";
-      rev = "ce886db2a58b147b926b92b1f8086a3d777f708a";
-      sha256 = "001kjg290hc85j2gvx7mnrypcvp5p1vm9f1q6pzzysiqclg01j92";
     };
   };
 

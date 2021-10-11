@@ -30,12 +30,12 @@ in makeVim {
       '';}
     { package = vim-polyglot; }
     { package = targets-vim; }
-    { package = customPlugins.clever-f-vim; }
+    { package = clever-f-vim; }
     { package = customPlugins.distilled-vim; }
     { package = customPlugins.flatlandia; }
     { package = iceberg-vim; }
     { package = customPlugins.nova-vim; }
-    { package = customPlugins.nord-vim; }
+    { package = nord-nvim; }
     { package = customPlugins.vim-substrata; }
     { package = vim-clap; }
     { package = customPlugins.vim-visual-star-search; }
