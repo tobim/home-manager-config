@@ -277,6 +277,7 @@ in
     shellAbbrs = {
       gg = "git grep";
       gd = "git diff";
+      gl = "git slog";
     };
 
     shellAliases = {
@@ -285,7 +286,19 @@ in
       ip = "ip -br -c";
     };
 
-    promptInit = ''
+    plugins = [
+      {
+        name = "z";
+        src = pkgs.fetchFromGitHub {
+          owner = "franciscolourenco";
+          repo = "done";
+          rev = "1.16.1";
+          sha256 = "09m8sjnlhagv44hk0vmh48q6kdmv9mb55v3gcpbkb02r6hmsqp1l";
+        };
+      }
+    ];
+
+    interactiveShellInit = ''
       function fish_prompt
         set -l last_status $status
 
@@ -319,21 +332,7 @@ in
         echo -n '$ '
         set_color normal
       end
-    '';
 
-    plugins = [
-      {
-        name = "z";
-        src = pkgs.fetchFromGitHub {
-          owner = "franciscolourenco";
-          repo = "done";
-          rev = "1.16.1";
-          sha256 = "09m8sjnlhagv44hk0vmh48q6kdmv9mb55v3gcpbkb02r6hmsqp1l";
-        };
-      }
-    ];
-
-    interactiveShellInit = ''
       function mkcd --description 'Create and enter a directory'
         mkdir -p $argv[1]; and cd $argv[1];
       end
@@ -411,12 +410,16 @@ in
       undo =     "reset --soft HEAD^";
       tracking = "!f() { git for-each-ref --format='%(upstream:short)' \"$(git rev-parse --symbolic-full-name \${1:-HEAD})\"; }; f";
       raze =     "!f() { git reset --hard \"$(git tracking)\"; }; f";
+      parent =   "!f() { git show-branch | grep '*' | grep -v \"$(git rev-parse --abbrev-ref HEAD)\" | head -n1 | sed 's/.*\\[\\(.*\\)\\].*/\\1/' | sed 's/[\\^~].*//'; }; 2>/dev/null f ";
+      base = "!f() { git merge-base $(git parent) HEAD; }; f";
       recommit = "!f() { git commit -eF \"$(git rev-parse --git-dir)/COMMIT_EDITMSG\"; }; f";
       glog =     "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'";
       grog =     "log --graph --abbrev-commit --decorate --all --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)'";
+      slog =     "!f() { git log --pretty=\"%C(yellow)%h%Creset %s %Cred%d%Creset\" $(git base)..; }; f";
       sub = "!f() { git grep -l $1 | xargs sed -i 's|$1|$2|g'; }; f";
       news = "!f() { git log --merges --format=\"%C(green)%cr%C(reset) %C(yellow)%h%C(reset) %b%C(#CFCFCF)%+N%C(reset)\" \"\$(git describe --first-parent --abbrev=0)\".. \"\$@\"; }; f";
-      base = "!f() { git reflog --no-abbrev --all | grep \"refs/heads/$(git name-rev --name-only HEAD)@{[0-9]\+}: branch: Created from\" | cut -d' ' -f 1; }; f";
+      #base = "!f() { git reflog --no-abbrev --all | grep \"refs/heads/$(git name-rev --name-only HEAD)@{[0-9]\+}: branch: Created from\" | cut -d' ' -f 1; }; f";
+
     };
     extraConfig = {
       merge.tool = "vimdiff";

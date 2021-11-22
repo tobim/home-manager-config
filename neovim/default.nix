@@ -80,12 +80,10 @@ in makeVim {
     }
     { package = vim-polyglot; }
     { package = nofrils-vim; }
-    { package = customPlugins.clever-f-vim; }
     { package = customPlugins.distilled-vim; }
     { package = customPlugins.flatlandia; }
     { package = customPlugins.iceberg-vim; }
     { package = customPlugins.nova-vim; }
-    { package = customPlugins.nord-vim; }
     { package = customPlugins.vim-substrata; }
     { package = fzfWrapper; }
     {
