@@ -39,7 +39,7 @@ let
       font-awesome
       hack-font
       ia-writer-duospace
-      nerdfonts
+      #nerdfonts
       proggyfonts
       roboto-mono
       source-code-pro
@@ -359,6 +359,7 @@ in
 
   programs.zsh = {
     enable = true;
+    enableCompletion = false;
     #initExtra = ''
     #  source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
     #  source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/config/p10k-lean.zsh

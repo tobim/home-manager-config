@@ -129,8 +129,8 @@ in makeVim {
       package = LanguageClient-neovim;
       config = ''
         let g:LanguageClient_serverCommands = {
-            \ 'c': ['clangd', '-background-index'],
-            \ 'cpp': ['clangd', '-background-index'],
+            \ 'c': ['clangd', '-background-index', '-header-insertion=never'],
+            \ 'cpp': ['clangd', '-background-index', '-header-insertion=never'],
             \ 'haskell': ['hie', '--lsp'],
             \ 'nix': ['${pkgs.rnix-lsp}/bin/rnix-lsp'],
             \ 'python': ['pyls'],
